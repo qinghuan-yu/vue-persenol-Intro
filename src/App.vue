@@ -1,6 +1,6 @@
 ﻿<template>
   <div id="app" @wheel="handleScroll">
-    <div class="sidebar-toggle" @click="toggleSidebar">
+    <div :class="['sidebar-toggle', { 'is-active': isSidebarOpen }]" @click="toggleSidebar">
       MENU
     </div>
 
@@ -67,7 +67,6 @@
     </div>
   </div>
 </template>
-
 <script>
 export default {
   name: 'App',
@@ -103,7 +102,6 @@ export default {
   },
 }
 </script>
-
 <style>
 #app {
   display: flex;
@@ -119,53 +117,64 @@ export default {
   z-index: 1;
 }
 
+/* 侧边栏开关按钮 (MENU) */
 .sidebar-toggle {
-  position: fixed;
+  position: fixed; /* 固定位置 */
   top: 20px;
-  left: 20px;
-  z-index: 1001;
-  cursor: pointer;
-  background: none;
-  border: none;
-  font-family: 'Font', sans-serif;
-  font-size: 24px;
-  color: #fff;
+  left: 40px;
+  z-index: 1001; /* 置于顶层 */
+  cursor: pointer; /* 鼠标指针样式 */
+  background: none; /* 无背景 */
+  border: none; /* 无边框 */
+  font-family: 'Font', sans-serif; /* 字体 */
+  font-size: 24px; /* 字体大小 */
+  color: #fff; /* 字体颜色 */
+  transition: color 0.5s ease; /* 颜色变化的平滑过渡 */
 }
 
+/* MENU按钮激活时的样式 */
+.sidebar-toggle.is-active {
+  color: #61b1d6; /* 激活时文本颜色改变，与导航栏统一 */
+}
+
+/* 遮罩层 */
 .overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999;
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
+  z-index: 999; /* 位于侧边栏下方 */
 }
 
+/* 遮罩层淡入淡出动画 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.4s ease;
+  transition: opacity 0.4s ease; /* 动画时长和缓动函数 */
 }
 
 .fade-enter-from,
 .fade-leave-to {
-  opacity: 0;
+  opacity: 0; /* 初始和结束状态为透明 */
 }
 
+/* 侧边栏容器 */
 .sidebar {
   position: fixed;
-  left: -350px; /* Initially hidden */
+  left: -350px; /* 初始状态下隐藏在左侧 */
   top: 0;
   height: 100%;
-  width: 350px;
-  background: transparent;
-  z-index: 1000;
-  transition: left 0.4s ease;
+  width: 350px; /* 侧边栏宽度 */
+  background: transparent; /* 透明背景 */
+  z-index: 1000; /* 层级 */
+  transition: left 0.6s ease; /* 左侧位置变化的动画 */
   display: flex;
 }
 
+/* 侧边栏打开时的状态 */
 .sidebar.is-open {
-  left: 0;
+  left: 0; /* 移动到屏幕左侧边缘 */
 }
 
 .sidebar-content {
@@ -174,64 +183,70 @@ export default {
   position: relative;
 }
 
+/* 侧边栏的竖线 */
 .vertical-line {
-  width: 2px;
-  background-color: #fff;
+  width: 2px; /* 竖线宽度 */
+  background-color: #fff; /* 竖线颜色 */
   position: absolute;
-  left: 100%;
+  left: 100%; /* 定位到侧边栏的右边缘 */
   top: 0;
   bottom: 0;
   transform: translateX(-100%);
-  transition: transform 0.4s ease;
+  transition: transform 0.4s ease; /* 移动动画 */
 }
 
 .sidebar.is-open .vertical-line {
   transform: translateX(0);
 }
 
+/* 侧边栏内部按钮的容器 */
 .sidebar-buttons {
-  margin-top: 100px; /* Adjust as needed */
-  margin-left: 40px;
+  margin-top: 100px; /* 距离顶部的间距 */
+  margin-left: 40px; /* 距离左侧的间距 */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
+/* 侧边栏按钮样式 */
 .sidebar-button {
   background: none;
   border: none;
   padding: 0;
-  margin-bottom: 25px;
-  font-family: 'Font', sans-serif;
-  font-size: 22px;
-  color: #fff;
+  margin-bottom: 70px; /* 按钮之间的垂直间距 */
+  font-family: 'Font', sans-serif; /* 字体 */
+  font-size: 30px; /* 字体大小 */
+  color: #fff; /* 字体颜色 */
   cursor: pointer;
-  transform: translateX(-100%);
-  opacity: 0;
-  transition: transform 0.4s ease, opacity 0.4s ease;
+  transform: translateX(-100%); /* 初始状态下向左偏移 */
+  opacity: 0; /* 初始状态下透明 */
+  transition: transform 0.4s ease, opacity 0.4s ease; /* 移入和淡入动画 */
 }
 
+/* 侧边栏打开时，按钮的最终状态 */
 .sidebar.is-open .sidebar-button {
-  transform: translateX(0);
-  opacity: 1;
+  transform: translateX(0); /* 移动到原始位置 */
+  opacity: 1; /* 完全不透明 */
 }
 
+/* 按钮依次出现的动画 (Staggered Animation) */
 .sidebar.is-open .sidebar-button:nth-child(1) {
-  transition-delay: 0.1s;
+  transition-delay: 0.1s; /* 第一个按钮的延迟 */
 }
 .sidebar.is-open .sidebar-button:nth-child(2) {
-  transition-delay: 0.2s;
+  transition-delay: 0.3s; /* 第二个按钮的延迟 */
 }
 .sidebar.is-open .sidebar-button:nth-child(3) {
-  transition-delay: 0.3s;
+  transition-delay: 0.5s; /* 第三个按钮的延迟 */
 }
 
-/* Adjust main content when sidebar is open */
+/* 当侧边栏打开时，调整主内容区域的样式 */
 .page-container {
-  transition: filter 0.4s ease;
+  transition: filter 0.4s ease; /* 滤镜效果的动画 */
 }
 
+/* 使用 ~ 选择器确保无论中间有什么元素，只要.sidebar.is-open存在，就应用样式 */
 .sidebar.is-open ~ .page-container {
-  filter: grayscale(80%);
+  filter: grayscale(80%); /* 应用灰度滤镜 */
 }
 </style>
