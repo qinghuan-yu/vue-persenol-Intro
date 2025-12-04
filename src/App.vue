@@ -5,21 +5,17 @@
     </div>
 
     <transition name="fade">
-      <div
-        class="overlay"
-        v-if="isSidebarOpen"
-        @click="toggleSidebar"
-      ></div>
+      <div class="overlay" v-if="isSidebarOpen" @click="toggleSidebar"></div>
     </transition>
 
     <nav :class="['sidebar', { 'is-open': isSidebarOpen }]">
       <div class="sidebar-content">
         <div class="vertical-line"></div>
         <div class="sidebar-buttons">
-          <button class="sidebar-button">介绍</button>
-          <button class="sidebar-button">合作</button>
-          <button class="sidebar-button" @click="navigateToSaturn">3D星系</button>
-          <button class="sidebar-button">联系方式</button>
+          <button class="sidebar-button" @click="navigateAndCloseSidebar('/')">介绍</button>
+          <button class="sidebar-button" @click="navigateAndCloseSidebar('/')">合作</button>
+          <button class="sidebar-button" @click="navigateAndCloseSidebar('/saturn-system')">3D星系</button>
+          <button class="sidebar-button" @click="navigateAndCloseSidebar('/')">联系方式</button>
         </div>
       </div>
     </nav>
@@ -30,6 +26,7 @@
         :key="index"
         :to="item.to"
         class="nav-button"
+        active-class="is-active"
       >
         <div class="nav-text">
           <span class="cn-text">{{ item.name }}</span>
@@ -41,33 +38,27 @@
     <div class="page-container">
       <hr class="divider" />
       <div class="transition-viewport">
-        <router-view v-slot="{ Component }">
-            <component :is="Component" class="page-transition-item" />
-        </router-view>
-
-        <transition name="info-fade">
-          <div v-if="showDescription" class="info-overlay">
-            <div class="info-overlay__content">
-              <p v-if="$route.path === '/'">在炎国的土地上，巨兽学士揭开亘古巨物的面纱一角；奇人异士在真龙的率领下敕封神明。无论风起云涌，炎国宇内始终安泰祥和。</p>
-              <p v-else-if="$route.path === '/川蜀'">天有烘炉，地生五金；山脉层峦叠嶂，建筑依山而建，与自然相映成趣。</p>
-              <p v-else-if="$route.path === '/勾吴'">水乡泽国，河网密布；白墙黑瓦，小桥流水，构成江南画卷。</p>
-              <p v-else-if="$route.path === '/闽台'">地理环境多样；传统木构架体现农业文明与匠心审美。</p>
-              <p v-else-if="$route.path === '/三秦'">山地城市，层峦叠嶂；尚蜀蜀道，百折千回。</p>
-              <p v-else-if="$route.path === '/玉门'">风沙古道，关隘雄浑；西域通衢的边塞风情。</p>
+        <!-- New Pure CSS Transition Structure -->
+        <router-view v-slot="{ Component, route }">
+          <transition name="reveal">
+            <div :key="route.path" class="transition-page-wrapper">
+              <component :is="Component" class="page-content" />
+              <div class="scan-line"></div>
             </div>
-          </div>
-        </transition>
+          </transition>
+        </router-view>
       </div>
       <hr class="divider" />
     </div>
 
-    <div class="info-panel">
+     <div class="info-panel">
       <button class="info-toggle" @click="toggleDescription">
         {{ showDescription ? '关闭' : '信息' }}
       </button>
     </div>
   </div>
 </template>
+
 <script>
 export default {
   name: 'App',
@@ -83,178 +74,186 @@ export default {
         { to: '/三秦', name: '三秦', en_name: 'SanQin' },
         { to: '/玉门', name: '玉门', en_name: 'YuMen' },
       ],
-    }
+    };
   },
   methods: {
-    toggleSidebar() {
-      this.isSidebarOpen = !this.isSidebarOpen
-    },
     handleScroll(event) {
-      const delta = Math.sign(event.deltaY)
-      const currentIndex = this.navItems.findIndex(item => item.to === this.$route.path)
-      const nextIndex = currentIndex + delta
+      const activeTransition = document.querySelector('.reveal-enter-active, .reveal-leave-active');
+      if (activeTransition) return;
+
+      const delta = Math.sign(event.deltaY);
+      const currentIndex = this.navItems.findIndex(item => item.to === this.$route.path);
+      if (currentIndex === -1) return;
+
+      const nextIndex = currentIndex + delta;
+      
       if (nextIndex >= 0 && nextIndex < this.navItems.length) {
-        this.$router.push(this.navItems[nextIndex].to)
+        this.$router.push(this.navItems[nextIndex].to);
       }
+    },
+    toggleSidebar() {
+      this.isSidebarOpen = !this.isSidebarOpen;
+    },
+    navigateAndCloseSidebar(path) {
+      if (this.isSidebarOpen) {
+        this.isSidebarOpen = false;
+      }
+      this.$router.push(path);
     },
     toggleDescription() {
       this.showDescription = !this.showDescription
     },
-    navigateToSaturn() {
-      this.$router.push('/saturn-system');
-      this.isSidebarOpen = false;
-    },
   },
-}
+};
 </script>
+
 <style>
+/* --- Animation Variables --- */
+:root {
+  --tech-duration: 1.5s; /* Further slowed down for a more deliberate feel */
+  --tech-ease: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* --- Keyframe Animations for Perfect Sync --- */
+@keyframes reveal-animation {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0 0 0 0%);
+  }
+}
+
+@keyframes scan-line-animation {
+  0% {
+    left: 105%; /* Start further off-screen to the right */
+    opacity: 0;
+  }
+  10% {
+    opacity: 1; /* Fade in quickly */
+  }
+  90% {
+    opacity: 1; /* Stay visible for the majority of the travel */
+  }
+  100% {
+    left: -5%; /* End further off-screen to the left */
+    opacity: 0; /* Fade out */
+  }
+}
+
+
+/* --- Core Transition Layout --- */
+.transition-viewport {
+  position: relative;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.transition-page-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000; /* Pure black background */
+}
+
+.page-content {
+  width: 100%;
+  height: 100%;
+}
+
+.scan-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #fff; /* White line */
+  box-shadow: -2px 0 15px rgba(255, 255, 255, 0.7); /* White glow */
+  z-index: 10;
+  left: 105%; /* Set initial position consistent with keyframes */
+  transform: translateX(-50%);
+  opacity: 0; /* Hidden by default */
+}
+
+/* --- Enter Animation (New Keyframe-based) --- */
+.reveal-enter-active {
+  animation: reveal-animation var(--tech-duration) var(--tech-ease) forwards;
+  z-index: 2; /* New page must be on top */
+}
+.reveal-enter-active .scan-line {
+  animation: scan-line-animation var(--tech-duration) var(--tech-ease) forwards;
+}
+
+/* --- Leave Animation (Old page fades to back) --- */
+.reveal-leave-active {
+  transition: filter calc(var(--tech-duration) * 0.9) linear;
+  z-index: 1; /* Old page sinks to the bottom */
+}
+.reveal-leave-to {
+  filter: brightness(0.3) grayscale(0.5);
+}
+
+/* --- Empty transition classes to prevent Vue's default behavior if needed --- */
+.reveal-enter-from, .reveal-enter-to, .reveal-leave-from {
+  /* These are no longer needed for the enter animation */
+}
+
+
+/* --- Existing Styles --- */
+.nav-button.is-active .cn-text {
+  color: #61b1d6;
+}
+
 #app {
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
   position: relative;
+  background-color: #000; /* Changed to pure black */
 }
 
-.transition-viewport {
-  position: relative;
-  flex-grow: 1;
-  z-index: 1;
-}
-
-/* 侧边栏开关按钮 (MENU) */
+/* ... Paste the rest of your original CSS here ... */
 .sidebar-toggle {
-  position: fixed; /* 固定位置 */
-  top: 20px;
-  left: 40px;
-  z-index: 1001; /* 置于顶层 */
-  cursor: pointer; /* 鼠标指针样式 */
-  background: none; /* 无背景 */
-  border: none; /* 无边框 */
-  font-family: 'Font', sans-serif; /* 字体 */
-  font-size: 24px; /* 字体大小 */
-  color: #fff; /* 字体颜色 */
-  transition: color 0.5s ease; /* 颜色变化的平滑过渡 */
+  position: fixed; top: 20px; left: 40px; z-index: 1001;
+  cursor: pointer; background: none; border: none; font-family: 'Font', sans-serif;
+  font-size: 24px; color: #fff; transition: color 0.5s ease;
 }
-
-/* MENU按钮激活时的样式 */
-.sidebar-toggle.is-active {
-  color: #61b1d6; /* 激活时文本颜色改变，与导航栏统一 */
-}
-
-/* 遮罩层 */
+.sidebar-toggle.is-active { color: #61b1d6; }
 .overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
-  z-index: 999; /* 位于侧边栏下方 */
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); z-index: 999;
 }
-
-/* 遮罩层淡入淡出动画 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s ease; /* 动画时长和缓动函数 */
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0; /* 初始和结束状态为透明 */
-}
-
-/* 侧边栏容器 */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 .sidebar {
-  position: fixed;
-  left: -360px; /* 初始状态下隐藏在左侧 */
-  top: 0;
-  height: 100%;
-  width: 360px; /* 侧边栏宽度 */
-  background: transparent; /* 透明背景 */
-  z-index: 1000; /* 层级 */
-  transition: left 0.6s ease; /* 左侧位置变化的动画 */
-  display: flex;
+  position: fixed; left: -360px; top: 0; height: 100%; width: 360px;
+  background: transparent; z-index: 1000; transition: left 0.6s ease; display: flex;
 }
-
-/* 侧边栏打开时的状态 */
-.sidebar.is-open {
-  left: 0; /* 移动到屏幕左侧边缘 */
-}
-
-.sidebar-content {
-  display: flex;
-  width: 100%;
-  position: relative;
-}
-
-/* 侧边栏的竖线 */
+.sidebar.is-open { left: 0; }
+.sidebar-content { display: flex; width: 100%; position: relative; }
 .vertical-line {
-  width: 1px; /* 竖线宽度 */
-  background-color: #fff; /* 竖线颜色 */
-  position: absolute;
-  left: 100%; /* 定位到侧边栏的右边缘 */
-  top: 0;
-  bottom: 0;
-  transform: translateX(-100%);
-  transition: transform 0.4s ease; /* 移动动画 */
+  width: 1px; background-color: #fff; position: absolute; left: 100%;
+  top: 0; bottom: 0; transform: translateX(-100%); transition: transform 0.4s ease;
 }
-
-.sidebar.is-open .vertical-line {
-  transform: translateX(0);
-}
-
-/* 侧边栏内部按钮的容器 */
+.sidebar.is-open .vertical-line { transform: translateX(0); }
 .sidebar-buttons {
-  margin-top: 100px; /* 距离顶部的间距 */
-  margin-left: 40px; /* 距离左侧的间距 */
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  margin-top: 100px; margin-left: 40px; display: flex; flex-direction: column; align-items: flex-start;
 }
-
-/* 侧边栏按钮样式 */
 .sidebar-button {
-  background: none;
-  border: none;
-  padding: 0;
-  margin-bottom: 90px; /* 按钮之间的垂直间距 */
-  font-family: 'Font', sans-serif; /* 字体 */
-  font-size: 30px; /* 字体大小 */
-  color: #fff; /* 字体颜色 */
-  cursor: pointer;
-  transform: translateX(-100%); /* 初始状态下向左偏移 */
-  opacity: 0; /* 初始状态下透明 */
-  transition: transform 0.4s ease, opacity 0.4s ease; /* 移入和淡入动画 */
+  background: none; border: none; padding: 0; margin-bottom: 90px; font-family: 'Font', sans-serif;
+  font-size: 30px; color: #fff; cursor: pointer; transform: translateX(-100%);
+  opacity: 0; transition: transform 0.4s ease, opacity 0.4s ease;
 }
-
-/* 侧边栏打开时，按钮的最终状态 */
-.sidebar.is-open .sidebar-button {
-  transform: translateX(0); /* 移动到原始位置 */
-  opacity: 1; /* 完全不透明 */
-}
-
-/* 按钮依次出现的动画 (Staggered Animation) */
-.sidebar.is-open .sidebar-button:nth-child(1) {
-  transition-delay: 0.1s; /* 第一个按钮的延迟 */
-}
-.sidebar.is-open .sidebar-button:nth-child(2) {
-  transition-delay: 0.3s; /* 第二个按钮的延迟 */
-}
-.sidebar.is-open .sidebar-button:nth-child(3) {
-  transition-delay: 0.5s; /* 第三个按钮的延迟 */
-}
-.sidebar.is-open .sidebar-button:nth-child(4) {
-  transition-delay: 0.7s; /* a new button's delay */
-}
-
-/* 当侧边栏打开时，调整主内容区域的样式 */
+.sidebar.is-open .sidebar-button { transform: translateX(0); opacity: 1; }
+.sidebar.is-open .sidebar-button:nth-child(1) { transition-delay: 0.1s; }
+.sidebar.is-open .sidebar-button:nth-child(2) { transition-delay: 0.3s; }
+.sidebar.is-open .sidebar-button:nth-child(3) { transition-delay: 0.5s; }
+.sidebar.is-open .sidebar-button:nth-child(4) { transition-delay: 0.7s; }
 .page-container {
-  transition: filter 0.4s ease; /* 滤镜效果的动画 */
+  display: flex; flex-direction: column; flex-grow: 1; transition: filter 0.4s ease;
 }
-
-/* 使用 ~ 选择器确保无论中间有什么元素，只要.sidebar.is-open存在，就应用样式 */
-.sidebar.is-open ~ .page-container {
-  filter: grayscale(80%); /* 应用灰度滤镜 */
-}
+.sidebar.is-open ~ .page-container { filter: grayscale(80%); }
 </style>
