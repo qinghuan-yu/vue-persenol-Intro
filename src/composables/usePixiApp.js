@@ -5,51 +5,92 @@ export function usePixiApp() {
   const particles = [];
   const graphics = new Graphics();
   
-  // 参数配置
-  const PARTICLE_COUNT = 350;        // 粒子数量 (如果卡顿可减少)
-  const CONNECTION_DISTANCE = 200;   // 连线距离 (越大连线越多)
-  const LINE_COLOR = 0x61b1d6;       // 连线颜色 (核心蓝)
+  // --- 参数配置 ---
+  const PARTICLE_COUNT = 300;        
+  const CONNECTION_DISTANCE = 180;   
+  const LINE_COLOR = 0x61b1d6;       
+  const SCREEN_PADDING = 150; 
+  
+  // 新增：渐显速度 (0.01 代表每帧增加 1% 透明度，约 1.5秒完全显示)
+  const FADE_IN_SPEED = 0.015; 
 
-  // 颜色定义
   const COLOR_ACCENT = 0x61b1d6; 
   const COLOR_DARK_1 = 0x333333;
   const COLOR_DARK_2 = 0x555555;
 
   class Particle {
     constructor(w, h) {
-      this.init(w, h);
+      this.init(w, h, true); // true = 首次初始化
     }
 
-    init(w, h) {
-      this.x = Math.random() * w;
-      this.y = Math.random() * h;
-      this.vx = (Math.random() - 0.5) * 0.4; // 速度
-      this.vy = (Math.random() - 0.5) * 0.4;
-      this.radius = Math.random() * 2 + 1; // 半径 1-3
+    init(w, h, initial = false) {
+      // 1. 运动属性
+      this.vx = (Math.random() - 0.5) * 0.5;
+      this.vy = (Math.random() - 0.5) * 0.5;
+      this.radius = Math.random() * 2 + 1;
       
-      // 颜色随机逻辑
+      // 2. 颜色属性
       const rand = Math.random();
       if (rand > 0.9) {
-        this.color = COLOR_ACCENT;
-        this.alpha = 0.9;
+        this.baseColor = COLOR_ACCENT;
+        this.baseAlpha = 0.9;
       } else if (rand > 0.6) {
-        this.color = COLOR_DARK_1; // 深灰
-        this.alpha = 0.5;
+        this.baseColor = COLOR_DARK_1;
+        this.baseAlpha = 0.5;
       } else {
-        this.color = COLOR_DARK_2; // 浅灰
-        this.alpha = 0.4;
+        this.baseColor = COLOR_DARK_2;
+        this.baseAlpha = 0.4;
       }
+
+      // 3. 位置与渐显状态
+      this.x = Math.random() * w;
+      this.y = Math.random() * h;
+
+      if (initial) {
+        // 首次加载：直接完全显示，避免开局黑屏
+        this.fadeInFactor = 1;
+      } else {
+        // 后续重生：从 0 开始慢慢显现
+        this.fadeInFactor = 0;
+      }
+
+      this.currentAlpha = 0;
     }
 
     update(w, h) {
       this.x += this.vx;
       this.y += this.vy;
 
-      // 边界循环 (从左边出，从右边进)
-      if (this.x < 0) this.x = w;
-      if (this.x > w) this.x = 0;
-      if (this.y < 0) this.y = h;
-      if (this.y > h) this.y = 0;
+      // --- A. 渐显逻辑 (Fade In) ---
+      if (this.fadeInFactor < 1) {
+        this.fadeInFactor += FADE_IN_SPEED;
+        if (this.fadeInFactor > 1) this.fadeInFactor = 1;
+      }
+
+      // --- B. 边界检查与重置 (Respawn) ---
+      const isDead = 
+        this.x < -SCREEN_PADDING || 
+        this.x > w + SCREEN_PADDING || 
+        this.y < -SCREEN_PADDING || 
+        this.y > h + SCREEN_PADDING;
+
+      if (isDead) {
+        this.init(w, h, false); // 重生，initial = false
+        return;
+      }
+
+      // --- C. 边界渐隐逻辑 (Fade Out at Edges) ---
+      let edgeFadeFactor = 1;
+
+      if (this.x < 0) edgeFadeFactor = Math.min(edgeFadeFactor, 1 - Math.abs(this.x) / SCREEN_PADDING);
+      else if (this.x > w) edgeFadeFactor = Math.min(edgeFadeFactor, 1 - (this.x - w) / SCREEN_PADDING);
+
+      if (this.y < 0) edgeFadeFactor = Math.min(edgeFadeFactor, 1 - Math.abs(this.y) / SCREEN_PADDING);
+      else if (this.y > h) edgeFadeFactor = Math.min(edgeFadeFactor, 1 - (this.y - h) / SCREEN_PADDING);
+
+      // --- D. 综合计算最终透明度 ---
+      // 最终Alpha = 基础Alpha * 边缘渐隐(FadeOut) * 出生渐显(FadeIn)
+      this.currentAlpha = this.baseAlpha * edgeFadeFactor * this.fadeInFactor;
     }
   }
 
@@ -63,51 +104,50 @@ export function usePixiApp() {
   function animate() {
     if (!app || !app.renderer) return;
     
-    // 1. 清除上一帧
     graphics.clear();
-    
     const w = app.screen.width;
     const h = app.screen.height;
 
-    // 2. 更新并绘制所有粒子
+    // 1. 绘制粒子
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
       p.update(w, h);
 
-      // PixiJS v8 新语法: 使用 .circle().fill()
+      if (p.currentAlpha <= 0.01) continue;
+
       graphics.circle(p.x, p.y, p.radius)
-              .fill({ color: p.color, alpha: p.alpha });
+              .fill({ color: p.baseColor, alpha: p.currentAlpha });
     }
 
-    // 3. 绘制连线 (PixiJS v8 新语法)
-    // 注意：在 v8 中，每一条不同透明度的线都需要单独 stroke
+    // 2. 绘制连线
     for (let i = 0; i < particles.length; i++) {
+      const p1 = particles[i];
+      if (p1.currentAlpha <= 0.01) continue;
+
       for (let j = i + 1; j < particles.length; j++) {
-        const p1 = particles[i];
         const p2 = particles[j];
+        if (p2.currentAlpha <= 0.01) continue;
         
-        // 计算距离
         const dx = p1.x - p2.x;
         const dy = p1.y - p2.y;
         
-        // 简单的碰撞检测优化：如果 x 或 y 轴差距过大，直接跳过开方运算
         if (Math.abs(dx) > CONNECTION_DISTANCE || Math.abs(dy) > CONNECTION_DISTANCE) continue;
 
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < CONNECTION_DISTANCE) {
-          // 计算透明度：距离越近(0)，alpha越趋近 1
-          // 距离越远(CONNECTION_DISTANCE)，alpha越趋近 0
-          const alpha = 1 - (dist / CONNECTION_DISTANCE);
+          const distAlpha = 1 - (dist / CONNECTION_DISTANCE);
+          
+          // 连线透明度也受两端粒子的渐显状态影响
+          const finalAlpha = distAlpha * Math.min(p1.currentAlpha, p2.currentAlpha);
 
-          // 只有当线条足够亮时才绘制（优化性能并保持视觉整洁）
-          if (alpha > 0.05) {
+          if (finalAlpha > 0.05) {
              graphics.moveTo(p1.x, p1.y)
                      .lineTo(p2.x, p2.y)
                      .stroke({ 
                         width: 1, 
                         color: LINE_COLOR, 
-                        alpha: alpha * 0.6 // 整体淡一点，防止过于杂乱
+                        alpha: finalAlpha * 0.8 
                      });
           }
         }
@@ -117,15 +157,13 @@ export function usePixiApp() {
 
   const init = async (container) => {
     app = new Application();
-    
-    // 初始化应用
     await app.init({
       width: container.clientWidth,
       height: container.clientHeight,
-      backgroundAlpha: 0, // 透明背景
+      backgroundAlpha: 0,
       resizeTo: container,
-      antialias: true,    // 抗锯齿，线条更平滑
-      preference: 'webgl', // 强制使用 WebGL
+      antialias: true,
+      preference: 'webgl',
     });
 
     container.appendChild(app.canvas);
@@ -133,7 +171,6 @@ export function usePixiApp() {
 
     createParticles(app.screen.width, app.screen.height);
     
-    // 监听窗口大小变化，重新生成粒子分布
     app.renderer.on('resize', () => {
        createParticles(app.screen.width, app.screen.height);
     });
