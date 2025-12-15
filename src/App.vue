@@ -68,8 +68,8 @@
 
         <!-- 主标题 (这里保留静态标题，或者你可以根据路由变成动态的) -->
         <h1 class="glitch-title">
-          IDENTITY<br>
-          <span style="color: var(--color-accent);">UNLOCKED</span>
+          INFO<br>
+          <span style="color: var(--color-accent);">UNLOCKING</span>
         </h1>
         
         <!-- 描述文本 / 路由视图区域 -->
@@ -85,7 +85,7 @@
     <div class="bottom-bar">
       <div class="info-trigger" @click="runTerminal">
         <span class="zh">信息</span>
-        <span class="en">INFO / TERMINAL</span>
+        <span class="en">UNLOCKING</span>
       </div>
     </div>
   </div>
@@ -166,14 +166,14 @@ export default {
     },
     createParticles() {
       this.particles = [];
-      const count = 200;
+      const count = 150;
       for (let i = 0; i < count; i++) {
         this.particles.push({
           x: Math.random() * this.canvas.width,
           y: Math.random() * this.canvas.height,
           vx: (Math.random() - 0.5) * 0.4,
           vy: (Math.random() - 0.5) * 0.4,
-          size: Math.random() * 1.5,
+          size: Math.random() * 2.5,
           color: Math.random() > 0.9 ? '#61b1d6' : (Math.random() > 0.5 ? '#333' : '#555')
         });
       }
@@ -198,7 +198,7 @@ export default {
           const p2 = this.particles[j];
           const d = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
           if (d < 100) {
-            this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.05 * (1 - d / 100)})`;
+            this.ctx.strokeStyle = `rgba(97, 177, 214, ${0.4 * (1 - d / 100)})`;
             this.ctx.beginPath();
             this.ctx.moveTo(p.x, p.y);
             this.ctx.lineTo(p2.x, p2.y);
@@ -247,7 +247,7 @@ export default {
   position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-width);
   background: rgba(10, 10, 10, 0.75); backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-tech); z-index: 90;
-  transform: translateX(-100%); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.42, 0, 0.58, 1);
   display: flex; flex-direction: column; justify-content: center; padding-left: 60px;
 }
 .sidebar.open { transform: translateX(0); }
@@ -269,7 +269,7 @@ export default {
 .menu-trigger {
   position: fixed; top: 40px; left: 40px; z-index: 100;
   font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: 0.1em;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   cursor: pointer; color: var(--color-text-main); transition: all 0.3s ease;
   display: flex; align-items: center; gap: 12px; opacity: 0.8;
 }
@@ -350,7 +350,7 @@ export default {
 
 .glitch-title {
   font-family: 'Space Grotesk', sans-serif; font-size: 3rem; margin: 0 0 1rem 0;
-  line-height: 0.9; color: #fff; animation: glitch-skew 3s infinite linear alternate-reverse;
+  line-height: 0.9; color: #fff;
 }
 @keyframes glitch-skew {
   0% { transform: skew(0deg); } 20% { transform: skew(-1deg); }
@@ -377,8 +377,8 @@ export default {
   cursor: pointer; transition: opacity 0.3s; opacity: 0.6;
 }
 .info-trigger:hover { opacity: 1; }
-.info-trigger .zh { font-size: 1.0rem; letter-spacing: 0.3em; color: #fff; margin-bottom: 2px; }
-.info-trigger .en { font-size: 0.6rem; letter-spacing: 0.1em; color: #666; transition: color 0.3s; }
+.info-trigger .zh { font-size: 1.2rem; letter-spacing: 0.3em; color: #fff; margin-bottom: 2px; }
+.info-trigger .en { font-size: 0.7rem; letter-spacing: 0.1em; color: #666; transition: color 0.3s; }
 .info-trigger:hover .en { color: var(--color-accent); }
 
 </style>
