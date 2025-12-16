@@ -2,9 +2,9 @@
   <div id="app-layout" @wheel.prevent="handleWheel">
     <div ref="pixiContainer" id="pixi-container"></div>
 
-    <div :class="['sidebar', { open: isSidebarOpen }]" ref="sidebarRef">
+    <div :class="['sidebar', { open: isSidebarOpen }]" ref="sidebarRef" style="opacity: 0; visibility: hidden;">
       <div class="sidebar-line"></div>
-      
+
       <router-link to="/intro" class="sidebar-item">
         <span>介绍</span><span class="sidebar-sub">INTRO</span>
       </router-link>
@@ -16,7 +16,7 @@
       </router-link>
     </div>
 
-    <div class="menu-trigger" @click="toggleSidebar" ref="menuTriggerRef">
+    <div class="menu-trigger" @click="toggleSidebar" ref="menuTriggerRef" style="opacity: 0; visibility: hidden;">
       MENU
     </div>
 
@@ -25,17 +25,12 @@
         <div class="loader-text-zh">神经元正在连接</div>
         <div class="loader-text-en">NEURAL CONNECTION ESTABLISHING</div>
       </div>
-      
-      <div class="timeline-bar" ref="timelineBarRef">
+
+      <div class="timeline-bar" ref="timelineBarRef" style="opacity: 0; visibility: hidden;">
         <div class="timeline-line"></div>
-        
-        <div 
-          v-for="(item, index) in rightNavItems" 
-          :key="index"
-          :ref="el => navNodeRefs[item.to] = el"
-          :class="['nav-node', { active: currentRoute === item.to }]"
-          @click="navigate(item.to)"
-        >
+
+        <div v-for="(item, index) in rightNavItems" :key="index" :ref="el => navNodeRefs[item.to] = el"
+          :class="['nav-node', { active: currentRoute === item.to }]" @click="navigate(item.to)">
           <div class="nav-label">
             <span class="zh">{{ item.name }}</span>
             <span class="en">{{ item.en_name }}</span>
@@ -44,44 +39,50 @@
         </div>
       </div>
 
-      <div class="content-card group" ref="contentCardRef" style="overflow: hidden;">
-        <div ref="innerWrapperRef">
-          <div class="corner tl"></div><div class="corner tr"></div>
-          <div class="corner bl"></div><div class="corner br"></div>
+      <div class="content-card group" ref="contentCardRef">
+        
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
 
-          <div class="status-row">
-            <div class="status-dot"></div>
-            <span class="status-text">SYSTEM // STANDBY</span>
-          </div>
+        <div class="card-header" ref="cardHeaderRef" style="opacity: 0; visibility: hidden;">
+            <div class="status-row">
+                <div class="status-dot"></div>
+                <span class="status-text">SYSTEM // STANDBY</span>
+            </div>
+            <h1 class="glitch-title">
+                INFO<br>
+                <span style="color: var(--color-accent);">UNLOCKING</span>
+            </h1>
+        </div>
 
-          <h1 class="glitch-title">
-            INFO<br>
-            <span style="color: var(--color-accent);">UNLOCKING</span>
-          </h1>
-          
-          <div class="view-container">
-            <router-view v-slot="{ Component }">
-              <transition 
-                :css="false" 
-                mode="out-in" 
-                @leave="onLeave"
-                @enter="onEnter"
-              >
-                <component :is="Component" :key="route.path" />
-              </transition>
-            </router-view>
-          </div>
+        <div class="clipper-box" ref="clipperRef" style="overflow: hidden; height: auto;">
+            <div ref="innerWrapperRef" style="opacity: 0; visibility: hidden;">
+                <div class="view-container">
+                    <router-view v-slot="{ Component }">
+                        <transition 
+                            :css="false" 
+                            mode="out-in" 
+                            @before-leave="onBeforeLeave" 
+                            @leave="onLeave" 
+                            @enter="onEnter"
+                        >
+                            <component :is="Component" :key="route.path" />
+                        </transition>
+                    </router-view>
+                </div>
+            </div>
         </div>
       </div>
     </section>
 
-    <div class="bottom-bar">
-    </div>
+    <div class="bottom-bar"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, onBeforeUpdate } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, onBeforeUpdate, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import gsap from 'gsap';
 import { usePixiApp } from '../composables/usePixiApp.js';
@@ -89,44 +90,26 @@ import { usePixiApp } from '../composables/usePixiApp.js';
 const router = useRouter();
 const route = useRoute();
 
-// --- Refs for Animation ---
+// --- Refs ---
 const pixiContainer = ref(null);
 const sidebarRef = ref(null);
 const menuTriggerRef = ref(null);
 const timelineBarRef = ref(null);
-const contentCardRef = ref(null);
+const contentCardRef = ref(null); 
+const cardHeaderRef = ref(null);  
+const clipperRef = ref(null);     
 const innerWrapperRef = ref(null);
 const loaderTextRef = ref(null);
-
 
 // --- State ---
 const isIntroPlaying = ref(true);
 const isSidebarOpen = ref(false);
+const transitionState = ref('idle'); 
+
 let isThrottled = false;
 const navNodeRefs = ref({});
 let resizeObserver = null;
 const transitionType = ref('parent');
-
-
-// --- Animations ---
-
-const onLeave = (el, done) => {
-  if (transitionType.value === 'parent') {
-    const tl = gsap.timeline({ onComplete: done });
-    tl.to(el, { skewX: 20, duration: 0.1, ease: 'power2.in' });
-    tl.to(el, { opacity: 0, filter: 'blur(5px)', x: -50, duration: 0.3, ease: 'power2.in' }, '>-0.05');
-  } else {
-    gsap.to(el, { opacity: 0, duration: 0.15, onComplete: done });
-  }
-};
-
-const onEnter = (el, done) => {
-  if (transitionType.value === 'parent') {
-    gsap.fromTo(el, { opacity: 0, scale: 0.95, x: 50 }, { opacity: 1, scale: 1, x: 0, duration: 0.5, ease: 'power2.out', onComplete: done });
-  } else {
-    gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.15, onComplete: done });
-  }
-};
 
 // --- Lifecycle Hooks ---
 
@@ -135,131 +118,103 @@ onBeforeUpdate(() => {
 });
 
 onMounted(async () => {
-  // --- PIXI Init ---
   if (pixiContainer.value) {
     await init(pixiContainer.value);
   }
 
-  // --- 1. 预先测量 (Pre-calculation) ---
-  const elementsToHide = [sidebarRef.value, menuTriggerRef.value, timelineBarRef.value, innerWrapperRef.value];
-  
-  // 【关键】确保 JS 测量时的盒模型与 CSS 一致 (border-box)
-  // 这防止了 padding 被计算两次导致的"路由切换变高"问题
-  if (contentCardRef.value) {
-      contentCardRef.value.style.boxSizing = 'border-box';
-  }
-
-  // 获取 CSS 计算出的 Padding 值
-  const computedStyle = window.getComputedStyle(contentCardRef.value);
-  const targetPaddingTop = computedStyle.paddingTop;
-  const targetPaddingBottom = computedStyle.paddingBottom;
-  
-  // 测量最终状态的尺寸 (此时内容都在 DOM 里，是自然撑开的)
-  const finalCardRect = contentCardRef.value.getBoundingClientRect();
-  const fixedWidth = finalCardRect.width; 
-  // 因为是 border-box，这个 offsetHeight 已经包含了 Padding，是最终需要的总高度
-  const targetHeight = contentCardRef.value.offsetHeight; 
-
-  // --- 2. 设置初始状态 (Set Initial State) ---
-  
+  // --- 1. 初始化隐藏状态 ---
+  const elementsToHide = [
+      sidebarRef.value, 
+      menuTriggerRef.value, 
+      timelineBarRef.value, 
+      cardHeaderRef.value,
+      innerWrapperRef.value 
+  ];
   gsap.set(elementsToHide, { autoAlpha: 0 });
   
-  gsap.set(contentCardRef.value, {
-    width: fixedWidth + 'px',
-    height: '2px', // 起始高度
-    paddingTop: '0px',
-    paddingBottom: '0px',
-    scaleX: 0.7,
-    borderTop: 'none',
-    borderBottom: 'none',
-    backgroundColor: 'var(--color-text-main)',
-    backdropFilter: 'none',
-    overflow: 'hidden' 
-  });
+  // 初始化卡片样式：直接全宽，但背景和边框透明
+  if (contentCardRef.value) {
+      gsap.set(contentCardRef.value, { 
+          width: '100%', 
+          backgroundColor: 'transparent', 
+          backdropFilter: 'none',
+          borderTopColor: 'rgba(255,255,255,0)',
+          borderBottomColor: 'rgba(255,255,255,0)'
+      });
+  }
   
-  gsap.set(loaderTextRef.value, { width: fixedWidth + 'px'});
+  // 初始 Clipper 高度为 0
+  if(clipperRef.value) {
+      gsap.set(clipperRef.value, { height: 0 });
+  }
 
-  // --- 3. 定义动画 (Animation) ---
+  // Loader 文字初始可见
+  gsap.set(loaderTextRef.value, { autoAlpha: 1, width: '300px' });
 
+  // --- 2. Intro Animation (开场动画) ---
   const introTl = gsap.timeline({
     onComplete: () => {
-      // 【关键修复】安全检查：防止组件卸载后回调仍在执行导致的报错
-      if (!contentCardRef.value) return;
-
       isIntroPlaying.value = false;
-      
-      // 动画结束，释放控制权
-      // 此时 targetHeight (动画终点) 和 auto (自然高度) 在像素上是完全相等的
-      contentCardRef.value.style.height = 'auto';
-      contentCardRef.value.style.width = '100%'; // 恢复响应式宽度
-      
-      // 清除 GSAP 遗留样式
-      gsap.set(contentCardRef.value, { 
-        clearProps: 'transform,scaleX,backgroundColor,backdropFilter,borderTop,borderBottom' 
-      });
+      // 动画结束，清理强制样式
+      if (contentCardRef.value) {
+          gsap.set(contentCardRef.value, { 
+            clearProps: 'backgroundColor,backdropFilter,borderTopColor,borderBottomColor' 
+          });
+      }
+      if (clipperRef.value) {
+           clipperRef.value.style.height = 'auto';
+      }
     }
   });
 
   introTl
-    .to(loaderTextRef.value, { autoAlpha: 0, duration: 0.5, delay: 5 })
+    // Step 1: 文字消失
+    .to(loaderTextRef.value, { autoAlpha: 0, duration: 0.5, delay: 3.5 })
+    
+    // Step 2: 卡片显形 (背景+边框) 与 高度展开 同时进行
+    .add(() => {
+        // 瞬间切换背景属性，避免渐变时的闪烁
+        gsap.set(contentCardRef.value, {
+            backgroundColor: 'rgba(10, 10, 10, 0.6)',
+            backdropFilter: 'blur(5px)'
+        });
+    })
     .to(contentCardRef.value, {
-      height: targetHeight, // 动画目标是"含Padding的总高度"
-      paddingTop: targetPaddingTop, // 恢复 Padding
-      paddingBottom: targetPaddingBottom,
-      scaleX: 1,
-      backgroundColor: 'rgba(10, 10, 10, 0.6)',
-      backdropFilter: 'blur(5px)',
-      duration: 0.8,
-      ease: 'power3.inOut' 
-    }, '<')
-    .to(contentCardRef.value, {
-       borderTop: '1px solid var(--border-tech)',
-       borderBottom: '1px solid var(--border-tech)',
-       duration: 0.4
-    }, ">-0.4")
-    .to(elementsToHide, {
+       borderTopColor: 'var(--border-tech)',
+       borderBottomColor: 'var(--border-tech)',
+       duration: 0.6
+    }, "<") // "<" 符号确保与上一条指令同步开始
+    .to(clipperRef.value, {
+        height: () => innerWrapperRef.value.offsetHeight, 
+        duration: 0.8,
+        ease: 'power3.inOut'
+    }, "<") 
+    
+    // Step 3: 内容淡入 (稍晚于高度展开)
+    .to(innerWrapperRef.value, {
+        autoAlpha: 1,
+        duration: 0.5
+    }, "-=0.6") 
+
+    // Step 4: 周围 UI 浮现
+    .to([sidebarRef.value, menuTriggerRef.value, timelineBarRef.value, cardHeaderRef.value], {
       autoAlpha: 1,
-      duration: 0.6,
-      stagger: 0.1,
-      ease: 'power2.out'
-    }, ">-0.5");
+      duration: 0.5,
+      stagger: 0.1
+    }, "-=0.3");
 
-  // --- 4. 路由切换/内容变化的高度监听 (Height Observer) ---
-  if (innerWrapperRef.value && contentCardRef.value) {
+  // --- Resize Observer (自适应高度) ---
+  if (innerWrapperRef.value && clipperRef.value) {
     resizeObserver = new ResizeObserver(entries => {
-      // 动画播放时禁止干涉，或者组件已销毁则退出
-      if (isIntroPlaying.value || !contentCardRef.value) return;
+      // 仅在非动画状态下响应窗口大小变化
+      if (isIntroPlaying.value || transitionState.value !== 'idle') return;
       
-      for (let entry of entries) {
-        // 1. 获取内部内容的高度 (innerWrapper)
-        const contentRectHeight = entry.contentRect.height;
-        
-        // 2. 获取当前的 padding 和 border
-        const style = window.getComputedStyle(contentCardRef.value);
-        const pad = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-        const border = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
-        
-        // 3. 计算需要的总高度 (border-box 模式下：高度 = 内容 + Padding + Border)
-        const neededHeight = contentRectHeight + pad + border;
-        
-        // 4. 获取当前实际高度
-        const currentHeight = contentCardRef.value.offsetHeight;
-
-        // 5. 只有当差异大于 1px 时才执行动画 (防抖动)
-        if (Math.abs(currentHeight - neededHeight) > 1) {
-            gsap.to(contentCardRef.value, { 
-              height: neededHeight, 
-              duration: 0.4, 
-              ease: 'power3.out',
-              // 动画结束后设为 auto，这对响应式布局至关重要
-              onComplete: () => {
-                 if (contentCardRef.value) {
-                    contentCardRef.value.style.height = 'auto';
-                 }
-              }
-            });
-        }
-      }
+      const contentHeight = entries[0].contentRect.height;
+      gsap.to(clipperRef.value, {
+          height: contentHeight,
+          duration: 0.3,
+          ease: 'power2.out'
+      });
     });
     resizeObserver.observe(innerWrapperRef.value);
   }
@@ -267,22 +222,86 @@ onMounted(async () => {
 
 onUnmounted(() => {
   destroy();
-  if (resizeObserver) {
-    resizeObserver.disconnect();
-  }
+  if (resizeObserver) resizeObserver.disconnect();
 });
 
-// --- Watchers ---
+// --- Transition Hooks (核心逻辑：无弹簧切换) ---
+
+// 用于记录上一页高度
+let previousHeight = 0;
+
+const onBeforeLeave = () => {
+  transitionState.value = 'leaving';
+  // 1. 锁定当前高度，防止内容消失瞬间父容器塌陷
+  if (clipperRef.value) {
+      previousHeight = clipperRef.value.offsetHeight;
+      clipperRef.value.style.height = previousHeight + 'px';
+  }
+};
+
+const onLeave = (el, done) => {
+  // 2. 仅淡出，不位移，保持布局稳定
+  gsap.to(el, { opacity: 0, duration: 0.2, onComplete: done });
+};
+
+const onEnter = (el, done) => {
+  transitionState.value = 'entering';
+  
+  // 3. 初始化新内容位置 (移除 scale，防止计算误差)
+  if (transitionType.value === 'parent') {
+      gsap.set(el, { opacity: 0, x: 20 });
+  } else {
+      gsap.set(el, { opacity: 0 });
+  }
+
+  nextTick(() => {
+      if (!clipperRef.value || !innerWrapperRef.value) {
+          done();
+          return;
+      }
+
+      // 4. 精确测量：强制设为 auto 测量目标高度
+      // 此时新内容已渲染但透明，能撑开容器
+      const startH = previousHeight;
+      clipperRef.value.style.height = 'auto';
+      const targetH = clipperRef.value.offsetHeight;
+
+      // 5. 立即恢复到起始高度，准备动画
+      clipperRef.value.style.height = startH + 'px';
+
+      const tl = gsap.timeline({
+          onComplete: () => {
+              transitionState.value = 'idle';
+              // 动画结束，释放高度控制
+              if (clipperRef.value) {
+                  clipperRef.value.style.height = 'auto';
+              }
+              done();
+          }
+      });
+
+      // 6. 执行高度平滑过渡 (绝对值控制，无抖动)
+      tl.to(clipperRef.value, { 
+          height: targetH,
+          duration: 0.4, 
+          ease: "power3.inOut" 
+        }, 0);
+
+      // 7. 内容淡入
+      if (transitionType.value === 'parent') {
+          tl.to(el, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, "-=0.3");
+      } else {
+          tl.to(el, { opacity: 1, duration: 0.3 }, "-=0.2");
+      }
+  });
+};
+
+// --- Watchers & Interaction ---
 
 watch(route, (to, from) => {
   const toTop = to.path.split('/')[1];
   const fromTop = from ? from.path.split('/')[1] : null;
-  
-  if (fromTop && toTop === fromTop) {
-    transitionType.value = 'child';
-  } else {
-    transitionType.value = 'parent';
-  }
+  transitionType.value = (fromTop && toTop === fromTop) ? 'child' : 'parent';
 
   const nodeEl = navNodeRefs.value[to.path];
   if (nodeEl) {
@@ -295,108 +314,57 @@ watch(route, (to, from) => {
   }
 }, { immediate: true });
 
-
-// --- Interactions ---
-
 const handleWheel = (event) => {
   if (isSidebarOpen.value || isIntroPlaying.value) return;
   if (isThrottled) return;
   isThrottled = true;
-
   setTimeout(() => { isThrottled = false; }, 500);
 
   const navItems = rightNavItems.value;
   if (navItems.length <= 1) return;
-
   const currentIndex = navItems.findIndex(item => item.to === currentRoute.value);
   if (currentIndex === -1) return;
-
   const direction = event.deltaY > 0 ? 1 : -1;
   let nextIndex = currentIndex + direction;
-
   if (nextIndex < 0) nextIndex = 0;
   else if (nextIndex >= navItems.length) nextIndex = navItems.length - 1;
-
   if (nextIndex !== currentIndex) navigate(navItems[nextIndex].to);
 };
 
 const rightNavItems = computed(() => {
   const currentTopLevelRoute = route.path.split('/')[1];
   switch (currentTopLevelRoute) {
-    case 'intro':
-      return [
+    case 'intro': return [
         { to: '/intro/personal', name: '个人', en_name: 'Personal' },
         { to: '/intro/skills', name: '技能', en_name: 'Skills' },
         { to: '/intro/ongoing', name: '项目', en_name: 'Ongoing' },
         { to: '/intro/finished', name: '作品', en_name: 'Finished' },
         { to: '/intro/links', name: '链接', en_name: 'Links' },
       ];
-    case 'collab':
-      return [
+    case 'collab': return [
         { to: '/collab/music', name: '音乐', en_name: 'Music' },
         { to: '/collab/dev', name: '开发', en_name: 'Dev' },
       ];
-    case 'contact':
-       return [ { to: '/contact', name: '联系', en_name: 'Contact' }, ];
+    case 'contact': return [ { to: '/contact', name: '联系', en_name: 'Contact' }, ];
     default: return [];
   }
 });
 
 const currentRoute = computed(() => route.path);
-
 const toggleSidebar = () => { if (!isIntroPlaying.value) isSidebarOpen.value = !isSidebarOpen.value; };
 const handleStageClick = () => { if (isSidebarOpen.value) isSidebarOpen.value = false; };
 const navigate = (path) => { if (route.path !== path) router.push(path); };
-
-
-// --- PixiJS Integration ---
 const { init, destroy } = usePixiApp();
 </script>
 
 <style>
-/* ... (existing styles) ... */
-.loader-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  z-index: 100;
-  /* Width is set by GSAP */
-  text-align: center;
-}
-
-.loader-text-zh {
-  color: var(--color-text-main);
-  font-size: 1rem;
-  letter-spacing: 0.2em;
-  padding-left: 0.2em; /* Optical alignment */
-  position: absolute;
-  top: -24px;
-  background-color: var(--color-bg);
-  padding: 0 12px;
-}
-
-.loader-text-en {
-  color: var(--color-text-dim);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.3em;
-  padding-left: 0.3em; /* Optical alignment */
-  position: absolute;
-  top: 5px;
-}
-
-/* --- 全局样式设定 (移植自目标代码) --- */
+/* 全局变量 */
 :root {
   --color-bg: #050505;
   --color-text-main: #e6e6e6;
   --color-text-dim: #666;
-  --color-accent: #61b1d6; /* 核心蓝色 */
-  --border-tech: rgba(255, 255, 255, 0.15); 
+  --color-accent: #61b1d6;
+  --border-tech: rgba(255, 255, 255, 0.15);
   --sidebar-width: 360px;
 }
 
@@ -426,150 +394,385 @@ body {
   z-index: 0;
 }
 
-/* --- 侧边栏 --- */
-.sidebar {
-  position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-width);
-  background: rgba(10, 10, 10, 0.75); backdrop-filter: blur(20px);
-  border-right: 1px solid var(--border-tech); z-index: 90;
-  transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.42, 0, 0.58, 1);
-  display: flex; flex-direction: column; justify-content: center; padding-left: 60px;
+/* Loader */
+.loader-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+  text-align: center;
 }
-.sidebar.open { transform: translateX(0); }
-.sidebar-line { position: absolute; left: 40px; top: 0; bottom: 0; width: 1px; background: var(--border-tech); }
+
+.loader-text-zh {
+  color: var(--color-text-main);
+  font-size: 1rem;
+  letter-spacing: 0.2em;
+  padding-left: 0.2em;
+  position: absolute;
+  top: -24px;
+  background-color: var(--color-bg);
+  padding: 0 12px;
+}
+
+.loader-text-en {
+  color: var(--color-text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  padding-left: 0.3em;
+  position: absolute;
+  top: 5px;
+}
+
+/* 侧边栏 */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--sidebar-width);
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-tech);
+  z-index: 90;
+  transform: translateX(-100%);
+  transition: transform 0.4s cubic-bezier(0.42, 0, 0.58, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 60px;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-line {
+  position: absolute;
+  left: 40px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-tech);
+}
+
 .sidebar-item {
-  font-size: 1.3rem; margin-bottom: 3rem; cursor: pointer; color: #888;
-  transition: all 0.3s; position: relative; display: flex; align-items: center;
+  font-size: 1.3rem;
+  margin-bottom: 3rem;
+  cursor: pointer;
+  color: #888;
+  transition: all 0.3s;
+  position: relative;
+  display: flex;
+  align-items: center;
   text-decoration: none;
 }
-.sidebar-item:hover { color: #fff; padding-left: 5px; }
+
+.sidebar-item:hover {
+  color: #fff;
+  padding-left: 5px;
+}
+
 .sidebar-item::before {
-  content: ''; position: absolute; left: -15px; width: 2px; height: 0%;
-  background: var(--color-accent); transition: all 0.3s;
+  content: '';
+  position: absolute;
+  left: -15px;
+  width: 2px;
+  height: 0%;
+  background: var(--color-accent);
+  transition: all 0.3s;
 }
-.sidebar-item:hover::before { height: 100%; }
-.sidebar-item.router-link-active { color: #fff; padding-left: 5px; }
-.sidebar-item.router-link-active::before { height: 100%; background: var(--color-accent); }
-.sidebar-sub { font-size: 0.9rem; margin-left: 10px; font-family: monospace; opacity: 0.3; }
-.mt-large { margin-top: 3rem; }
 
-/* --- 菜单触发器 --- */
+.sidebar-item:hover::before {
+  height: 100%;
+}
+
+.sidebar-item.router-link-active {
+  color: #fff;
+  padding-left: 5px;
+}
+
+.sidebar-item.router-link-active::before {
+  height: 100%;
+  background: var(--color-accent);
+}
+
+.sidebar-sub {
+  font-size: 0.9rem;
+  margin-left: 10px;
+  font-family: monospace;
+  opacity: 0.3;
+}
+
+/* 菜单触发器 */
 .menu-trigger {
-  position: fixed; top: 40px; left: 40px; z-index: 100;
-  font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: 0.1em;
+  position: fixed;
+  top: 40px;
+  left: 40px;
+  z-index: 100;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   font-size: 1.4rem;
-  cursor: pointer; color: var(--color-text-main); transition: all 0.3s ease;
-  display: flex; align-items: center; gap: 12px; opacity: 0.8;
+  cursor: pointer;
+  color: var(--color-text-main);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.8;
 }
+
 .menu-trigger::before {
-  content: ''; display: block; width: 7px; height: 7px; background: #fff;
-  border-radius: 50%; transition: all 0.3s;
+  content: '';
+  display: block;
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  border-radius: 50%;
+  transition: all 0.3s;
 }
-.menu-trigger:hover { opacity: 1; color: var(--color-accent); }
-.menu-trigger:hover::before { background: var(--color-accent); box-shadow: 0 0 10px var(--color-accent); }
 
-/* --- 主舞台 --- */
+.menu-trigger:hover {
+  opacity: 1;
+  color: var(--color-accent);
+}
+
+.menu-trigger:hover::before {
+  background: var(--color-accent);
+  box-shadow: 0 0 10px var(--color-accent);
+}
+
+/* 主舞台 */
 #main-stage {
-  flex: 1; position: relative; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* --- 右侧时间轴导航 --- */
+/* 右侧时间轴 */
 .timeline-bar {
-  position: absolute; right: 0; top: 0; bottom: 0; width: 120px;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   z-index: 20;
 }
+
 .timeline-line {
-  width: 1px; height: 70%; background: var(--border-tech); position: absolute; right: 50px;
+  width: 1px;
+  height: 70%;
+  background: var(--border-tech);
+  position: absolute;
+  right: 50px;
 }
+
 .nav-node {
-  position: relative; margin: 1.8rem 0; cursor: pointer;
-  display: flex; align-items: center; justify-content: flex-end;
-  width: 100%; padding-right: 47px;
+  position: relative;
+  margin: 1.8rem 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  padding-right: 47px;
 }
+
 .nav-node-circle {
-  width: 7px; height: 7px; background: #111; border: 1px solid #444;
-  border-radius: 50%; transition: all 0.3s ease; z-index: 2;
+  width: 7px;
+  height: 7px;
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  z-index: 2;
 }
+
 .nav-label {
-  position: absolute; right: 72px; text-align: right; opacity: 0;
-  transform: translateX(20px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: absolute;
+  right: 72px;
+  text-align: right;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
-.nav-label .zh { display: block; font-size: 1.1rem; color: #fff; font-weight: 500; }
-.nav-label .en { display: block; font-size: 0.6rem; color: var(--color-accent); letter-spacing: 0.1em; text-transform: uppercase; }
 
-.nav-node:hover .nav-node-circle { background: var(--color-accent); border-color: var(--color-accent); box-shadow: 0 0 8px var(--color-accent); }
-.nav-node:hover .nav-label { opacity: 1; transform: translateX(0); }
+.nav-label .zh {
+  display: block;
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 500;
+}
 
-.nav-node.active { padding-right: 44px; }
+.nav-label .en {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--color-accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nav-node:hover .nav-node-circle {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent);
+}
+
+.nav-node:hover .nav-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.nav-node.active {
+  padding-right: 44px;
+}
+
 .nav-node.active .nav-node-circle {
-  width: 12px; height: 12px; background: #000; border: 2px solid var(--color-accent);
+  width: 12px;
+  height: 12px;
+  background: #000;
+  border: 2px solid var(--color-accent);
   box-shadow: 0 0 10px rgba(97, 177, 214, 0.4);
 }
-.nav-node.active .nav-label { opacity: 1; transform: translateX(0); }
 
-/* --- 中央内容卡片 --- */
-/* MainLayout.vue 的 <style> 部分 */
-
-.content-card {
-  box-sizing: border-box; /* 【核心修复】这一行能解决路由切换后变高的问题 */
-  background: rgba(10, 10, 10, 0.6); 
-  backdrop-filter: blur(5px);
-  border: 1px solid var(--border-tech); 
-  padding: 3rem; 
-  max-width: 600px; 
-  width: 100%;
-  position: relative; 
-  z-index: 10; 
-  transition: border-color 0.3s;
-  /* overflow: hidden;  <-- 建议去掉或在JS中控制，否则有时会切断阴影 */
+.nav-node.active .nav-label {
+  opacity: 1;
+  transform: translateX(0);
 }
-.content-card:hover { border-color: rgba(255, 255, 255, 0.3); }
+
+/* 内容卡片 */
+.content-card {
+  box-sizing: border-box;
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(5px);
+  border: 1px solid var(--border-tech);
+  padding: 3rem;
+  max-width: 600px;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+  transition: border-color 0.3s;
+  overflow: visible; /* 允许角落装饰超出 */
+}
+
+.content-card:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Clipper 容器：这是防止弹簧效果的关键 */
+.clipper-box {
+    overflow: hidden;
+    height: auto;
+    position: relative;
+    will-change: height;
+}
 
 /* 角落装饰 */
 .corner {
-  position: absolute; width: 8px; height: 8px; border-color: #fff;
-  border-style: solid; opacity: 0.3; transition: all 0.3s;
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: #fff;
+  border-style: solid;
+  opacity: 0.3;
+  transition: all 0.3s;
 }
-.tl { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
-.tr { top: -1px; right: -1px; border-width: 1px 1px 0 0; }
-.bl { bottom: -1px; left: -1px; border-width: 0 0 1px 1px; }
-.br { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
-.content-card:hover .corner { width: 15px; height: 15px; opacity: 1; border-color: var(--color-accent); }
+
+.tl {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+.tr {
+  top: -1px;
+  right: -1px;
+  border-width: 1px 1px 0 0;
+}
+
+.bl {
+  bottom: -1px;
+  left: -1px;
+  border-width: 0 0 1px 1px;
+}
+
+.br {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+.content-card:hover .corner {
+  width: 15px;
+  height: 15px;
+  opacity: 1;
+  border-color: var(--color-accent);
+}
 
 /* 状态与文本 */
-.status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; opacity: 0.5; }
-.status-dot { width: 6px; height: 6px; background: #999; border-radius: 50%; animation: pulse 2s infinite; }
-.status-text { font-size: 0.7rem; letter-spacing: 0.2em; font-weight: bold; }
-@keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: #999;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-text {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  font-weight: bold;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
 
 .glitch-title {
-  font-family: 'Space Grotesk', sans-serif; font-size: 3rem; margin: 0 0 1rem 0;
-  line-height: 0.9; color: #fff;
-}
-@keyframes glitch-skew {
-  0% { transform: skew(0deg); } 20% { transform: skew(-1deg); }
-  40% { transform: skew(1deg); } 60% { transform: skew(0deg); } 100% { transform: skew(0deg); }
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 3rem;
+  margin: 0 0 1rem 0;
+  line-height: 0.9;
+  color: #fff;
 }
 
 .view-container {
-    min-height: 60px;
-    color: #888;
-    line-height: 1.6;
+  min-height: 60px;
+  color: #888;
+  line-height: 1.6;
 }
 
-/* --- 底部栏 --- */
+/* 底部栏 */
 .bottom-bar {
-  height: 80px; display: flex; justify-content: center; align-items: center;
-  z-index: 10; pointer-events: none;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
 }
-.info-trigger {
-  pointer-events: auto; display: flex; flex-direction: column; align-items: center;
-  cursor: pointer; transition: opacity 0.3s; opacity: 0.6;
-}
-.info-trigger:hover { opacity: 1; }
-.info-trigger .zh { font-size: 1.2rem; letter-spacing: 0.3em; color: #fff; margin-bottom: 2px; }
-.info-trigger .en { font-size: 0.7rem; letter-spacing: 0.1em; color: #666; transition: color 0.3s; }
-.info-trigger:hover .en { color: var(--color-accent); }
 </style>
