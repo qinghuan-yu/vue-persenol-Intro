@@ -1,5 +1,15 @@
 import { Graphics } from 'pixi.js';
 
+/*
+    useAdvancedParticles
+    - 目的: 在传入的 Pixi `app` 上渲染一个带网络和形状变形两种模式的高级粒子系统。
+    - 导出: { init(), destroy(), morphToShapes(configs) }
+        - init(containerApp): 将 graphics 添加到 app.stage 并开始动画
+        - destroy(): 停止动画并释放资源
+        - morphToShapes(configs): 接受形状配置数组，将粒子排列为文字或图片形状；传入空数组或 null 恢复网络模式
+    - 设计要点: 根据设备（isMobile）自动降级参数；支持离屏 canvas 扫描颜色与点位
+*/
+
 // --- 1. 设备检测与动态配置 ---
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -245,8 +255,7 @@ export function useAdvancedParticles(app) {
     let state = 'NETWORK';
     
     // 动画计时器
-    let startTime = null; 
-    // [修复] 删除了未使用的 networkTime 变量
+    let startTime = null;
 
     let mouseX = -9999;
     let mouseY = -9999;
@@ -258,7 +267,6 @@ export function useAdvancedParticles(app) {
     function init() {
         app.stage.addChild(graphics);
         startTime = performance.now();
-        // [修复] 删除 networkTime 赋值
         particles.length = 0;
         
         const w = app.screen.width;
@@ -501,13 +509,12 @@ export function useAdvancedParticles(app) {
         const w = app.screen.width;
         const h = app.screen.height;
 
-        // 1. 恢复到网络状态
+        // 1. 恢复到网络状态（传入空 configs 时切回 NETWORK）
         if (!configs || configs.length === 0) {
             if (state === 'NETWORK') return; 
             state = 'NETWORK';
             startTime = performance.now(); // 重置时间以触发 Growth 动画
-            
-            // 释放所有粒子，[修复] 不再传递参数
+            // 释放所有粒子，恢复为网络漂浮状态
             for (const p of particles) {
                 if(p.visible) p.releaseToNetwork();
             }
