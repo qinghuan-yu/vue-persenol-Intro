@@ -13,13 +13,12 @@ import { Graphics } from 'pixi.js';
 // --- 1. 设备检测与动态配置 ---
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-// 移动端降级配置：减少粒子数，增大采样间距
-const PARTICLE_COUNT = isMobile ? 3000 : 6000; 
-const SAMPLING_STEP = isMobile ? 3 : 2; 
+// 移动端降级配置：减少粒子数
+const PARTICLE_COUNT = isMobile ? 4000 : 8000; 
 
-// 粒子尺寸
-const PARTICLE_SIZE_MIN = isMobile ? 1.0 : 0.8;
-const PARTICLE_SIZE_MAX = isMobile ? 2.0 : 1.5;
+// 粒子尺寸（稍微调大，以适应拉大的间距）
+const PARTICLE_SIZE_MIN = isMobile ? 1.0 : 1.5;
+const PARTICLE_SIZE_MAX = isMobile ? 2.0 : 2.2;
 
 // --- 神经网络 (NETWORK) 呼吸动画配置 ---
 const NETWORK_CONFIG = {
@@ -209,7 +208,11 @@ class Particle {
 
         // 6. 快速显形逻辑
         if (this.fadeInFactor < 1) this.fadeInFactor += 0.05;
-        this.currentRenderAlpha = 1.0 * this.fadeInFactor; 
+        this.currentRenderAlpha = 1.0 * this.fadeInFactor;
+        
+        // [核心] 强制固定粒子半径，配合 VISUAL_SCALE=1.8
+        // 半径 1.2 既能看清，又有空隙，让扫描器识别出点阵
+        this.radius = isMobile ? 1.0 : 1.2;
     }
 
     // 重置并随机散开 (修复：不再需要 w, h 参数)
@@ -436,9 +439,16 @@ export function useAdvancedParticles(app) {
                     
                     offscreenCanvas.width = scaledWidth;
                     offscreenCanvas.height = scaledHeight;
+                    
+                    // [修复] 显式清除画布，防止混色
+                    offscreenCtx.clearRect(0, 0, scaledWidth, scaledHeight);
+                    
                     // 平滑绘制
                     offscreenCtx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
-                    resolve(scanCanvas(scaledWidth, scaledHeight));
+                    
+                    // 针对白底黑码的二维码，需要反转扫描
+                    const shouldInvert = false;
+                    resolve(scanCanvas(scaledWidth, scaledHeight, shouldInvert));
                 };
                 img.onerror = (err) => {
                     console.error('Image failed to load:', source, err);
@@ -468,37 +478,43 @@ export function useAdvancedParticles(app) {
     }
 
     // --- 核心扫描算法 (集成自 Ark-Particle-Imitate) ---
-    function scanCanvas(width, height) {
+    function scanCanvas(width, height, invert = false) {
         const points = [];
         const imageData = offscreenCtx.getImageData(0, 0, width, height);
         const data = imageData.data;
-
-        // 根据设备动态调整步长
-        const step = SAMPLING_STEP;
+        
+        // 关键点1：加大步长，不要采那么密，给粒子留出缝隙
+        const step = 2;
 
         for (let y = 0; y < height; y += step) {
             for (let x = 0; x < width; x += step) {
                 const index = (y * width + x) * 4;
-                
                 const r = data[index];
                 const g = data[index + 1];
                 const b = data[index + 2];
                 const a = data[index + 3];
 
-                // 核心判定：
-                // 1. Alpha > 0 (不是完全透明)
-                // 2. 亮度 > 20 (过滤掉纯黑背景，这解决了你之前二维码黑块的问题)
-                const brightness = (r + g + b) / 3;
-                
-                if (a > 50 && brightness > 30) {
-                    // 提取颜色
-                    const color = (r << 16) | (g << 8) | b; 
+                if (a > 50) {
+                    const brightness = (r + g + b) / 3;
                     
-                    points.push({ 
-                        x, 
-                        y, 
-                        color // 将颜色数据绑定到坐标点上
-                    });
+                    let isTarget = false;
+                    // 关键点2：极严格的阈值。
+                    // 只有 brightness 小于 50 (非常黑) 才算数，过滤掉模糊边缘
+                    if (invert && brightness < 50) { 
+                        isTarget = true;
+                    } else if (!invert && brightness > 100) {
+                        // 提取最亮的像素（中心点），去除边缘灰色杂噪
+                        isTarget = true;
+                    }
+
+                    if (isTarget) {
+                        points.push({ 
+                            x, 
+                            y, 
+                            // 强制统一颜色，避免杂色干扰视觉
+                            color: 0x61b1d6
+                        });
+                    }
                 }
             }
         }
@@ -522,6 +538,11 @@ export function useAdvancedParticles(app) {
         }
 
         state = 'MORPH';
+        
+        // --- 核心配置：视觉缩放倍率 ---
+        // 原图是 200x200，设为 1.8 则屏幕实际显示 360x360 像素
+        // 设为 2.0 则显示 400x400。请根据实际扫描难易度调整此值。
+        const VISUAL_SCALE = isMobile ? 1.4 : 1.8;
         
         // 2. 解析所有配置
         const shapesData = await Promise.all(
@@ -552,6 +573,12 @@ export function useAdvancedParticles(app) {
             return;
         }
         
+        // 调试输出
+        console.log('=== Particle Shape Debug ===');
+        validShapes.forEach((shape, idx) => {
+            console.log(`Shape ${idx}: type=${shape.type}, points=${shape.points.length}, size=${Math.round(shape.width)}x${Math.round(shape.height)}`);
+        });
+        
         // --- 智能布局 (Smart Layout) ---
         const qrShapes = validShapes.filter(s => s.type === 'image');
         const textShapes = validShapes.filter(s => s.type === 'text');
@@ -560,46 +587,68 @@ export function useAdvancedParticles(app) {
         const centerX = w / 2;
         const centerY = h / 2;
         
-        // 针对移动端的布局调整
-        const centerSafeZone = isMobile ? 0 : 450; 
-        const qrOffset = isMobile ? -100 : -50;
-        const textOffset = isMobile ? 150 : 220;
+        // 布局参数
+        const cardWidth = 600;           // 信息框宽度
+        const cardMargin = 80;           // 信息框与二维码之间的间距
+        const qrVerticalOffset = 0;      // 二维码垂直偏移（0表示与信息框中心对齐）
+        const textBottomOffset = 220;    // 文字距离中心的下方距离
 
-        // A. 左侧二维码
-        if (qrShapes[0]) {
+        // A. 左侧二维码（QQ）
+        if (qrShapes[0] && !isMobile) {
             const shape = qrShapes[0];
-            // 移动端若有二维码，居中显示；PC端偏左
-            const tx = isMobile ? centerX - shape.width/2 : centerX - (centerSafeZone / 2) - shape.width;
-            const ty = centerY - (shape.height / 2) + qrOffset;
-            fillParticles(shape, tx, ty);
+            // 计算放大后的实际显示尺寸
+            const displayW = shape.width * VISUAL_SCALE;
+            const displayH = shape.height * VISUAL_SCALE;
+
+            // 锚点计算：根据放大后的尺寸向左偏移
+            const tx = centerX - (cardWidth / 2) - cardMargin - displayW;
+            const ty = centerY - (displayH / 2) + qrVerticalOffset;
+            
+            fillParticles(shape, tx, ty, VISUAL_SCALE);
         }
 
-        // B. 右侧二维码 (移动端通常只显示一个，这里若有第二个则不显示或堆叠，视需求而定)
+        // B. 右侧二维码（WeChat）
         if (qrShapes[1] && !isMobile) {
             const shape = qrShapes[1];
-            const tx = centerX + (centerSafeZone / 2);
-            const ty = centerY - (shape.height / 2) + qrOffset;
-            fillParticles(shape, tx, ty);
+            const displayH = shape.height * VISUAL_SCALE;
+
+            // 锚点计算：从中心向右偏移
+            const tx = centerX + (cardWidth / 2) + cardMargin;
+            const ty = centerY - (displayH / 2) + qrVerticalOffset;
+            
+            fillParticles(shape, tx, ty, VISUAL_SCALE);
         }
 
-        // C. 底部文字
+        // C. 底部文字（邮箱）- 文字通常不需要这么大的缩放，可以单独设
         if (textShapes[0]) {
             const shape = textShapes[0];
-            const tx = centerX - (shape.width / 2);
-            const ty = centerY + textOffset;
-            fillParticles(shape, tx, ty);
+            // 文字保持原比例或稍微放大
+            const textScale = isMobile ? 0.8 : 1.0; 
+            const displayW = shape.width * textScale;
+            
+            const tx = centerX - (displayW / 2);
+            const ty = centerY + textBottomOffset;
+            fillParticles(shape, tx, ty, textScale);
         }
+        
+        console.log(`Total particles used: ${particleIndex} / ${particles.length}`);
 
-        function fillParticles(shape, startX, startY) {
+        function fillParticles(shape, startX, startY, scale) {
             shuffleArray(shape.points);
             // 遍历形状的点
             for (const point of shape.points) {
                 if (particleIndex < particles.length) {
                     const p = particles[particleIndex++];
-                    const tx = point.x + (startX - shape.bounds.minX);
-                    const ty = point.y + (startY - shape.bounds.minY);
                     
-                    p.moveTo(tx, ty);
+                    // 核心：将原始坐标乘以缩放倍率
+                    // 这样粒子之间的间距就变大了
+                    const localX = (point.x - shape.bounds.minX) * scale;
+                    const localY = (point.y - shape.bounds.minY) * scale;
+                    
+                    const finalX = startX + localX;
+                    const finalY = startY + localY;
+
+                    p.moveTo(finalX, finalY);
                     
                     // 核心整合：应用图片原色
                     if (point.color !== undefined) {

@@ -24,7 +24,7 @@
           <div class="nav-node-circle"></div>
         </div>
       </div>
-      <div class="content-card" :class="{ 'is-contact': isContactPage }" ref="contentCardRef">
+      <div class="content-card" ref="contentCardRef">
         <div class="corner tl"></div>
         <div class="corner tr"></div>
         <div class="corner bl"></div>
@@ -54,9 +54,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import gsap from 'gsap';
 import { usePixiApp } from '../composables/usePixiApp.js';
-// eslint-disable-next-line no-unused-vars
 import qqQrCode from '@/assets/QQ.png';
-// eslint-disable-next-line no-unused-vars
 import wechatQrCode from '@/assets/WeChat.png';
 const router = useRouter();
 const route = useRoute();
@@ -76,7 +74,6 @@ const loaderTextRef = ref(null);
 const isIntroPlaying = ref(true);
 const isSidebarOpen = ref(false);
 let isThrottled = false; // 用于滚轮节流
-const isContactPage = computed(() => route.path.includes('/contact'));
 // --- 动画逻辑 ---
 // 1. 离开动画
 const onLeave = (el, done) => {
@@ -141,22 +138,30 @@ onMounted(async () => {
 });
 watch(route, (newRoute) => {
   if (!morphToShapes) return;
-  // 只保留 Contact 页面的粒子聚合
+  // Contact 页面：显示两个二维码粒子（左右两侧）+ 底部邮箱文字
   if (newRoute.path.includes('/contact')) {
     const shapes = [
       {
         source: 'Reliarc.me@outlook.com',
         options: {
           type: 'text',
-          fontSize: 100, // 保持这个大字体以保证清晰度
+          fontSize: 60,
           fontFamily: 'Arial, sans-serif',
           color: '#61b1d6'
         }
+      },
+      {
+        source: qqQrCode,
+        options: { type: 'image', scale: 1.0 }
+      },
+      {
+        source: wechatQrCode,
+        options: { type: 'image', scale: 1.0 }
       }
     ];
     morphToShapes(shapes);
   }
-  // 其他所有页面（包括 intro, collab/music 等）都清空粒子，回归网络背景
+  // 其他所有页面：清空粒子，回归网络背景
   else {
     morphToShapes([]);
   }
@@ -501,16 +506,6 @@ body {
 }
 .content-card:hover {
   border-color: rgba(255, 255, 255, 0.3);
-}
-.content-card.is-contact {
-  background: transparent;
-  border-color: transparent;
-  backdrop-filter: none;
-}
-.content-card.is-contact .corner,
-.content-card.is-contact .card-header {
-  opacity: 0;
-  visibility: hidden;
 }
 /* Clipper 容器：动画核心 */
 .clipper-box {
