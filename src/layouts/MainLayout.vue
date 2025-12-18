@@ -74,6 +74,11 @@
                 fill="none" 
                 stroke="rgba(97, 177, 214, 0.8)" 
                 stroke-width="2"/>
+              <!-- 黄色装饰色块 -->
+              <rect x="370" y="5" width="20" height="4" fill="#F4D03F" opacity="0.9">
+                <animate attributeName="opacity" values="0.9;0.6;0.9" dur="2s" repeatCount="indefinite"/>
+              </rect>
+              <rect x="5" y="111" width="15" height="4" fill="#F4D03F" opacity="0.8"/>
               <!-- 装饰性条形码 -->
               <g class="barcode" transform="translate(10, 105)" opacity="0.2">
                 <rect x="0" width="2" height="10" fill="#61b1d6"/>
@@ -84,6 +89,8 @@
                 <rect x="19" width="1" height="10" fill="#61b1d6"/>
                 <rect x="22" width="3" height="10" fill="#61b1d6"/>
               </g>
+              <!-- 系统信息微文本 -->
+              <text x="320" y="113" font-size="8" fill="rgba(255, 255, 255, 0.3)" font-family="monospace">VER. 2.0.45</text>
             </svg>
             <h1 class="glitch-title" data-text="I am Relic">
               I am Relic<br>
@@ -330,6 +337,7 @@ const handleWheel = (event) => {
   --color-text-main: #e6e6e6;
   --color-text-dim: #666;
   --color-accent: #61b1d6;
+  --color-warning: #F4D03F;
   --border-tech: rgba(255, 255, 255, 0.15);
   --sidebar-width: 360px;
 }

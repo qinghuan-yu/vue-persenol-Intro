@@ -1,12 +1,240 @@
 <template>
-  <div>
-    <h2 v-scramble>Ongoing Projects</h2>
-    <p v-scramble>明日方舟电子通行证简易版 </p>
-    <p v-scramble>IoT Life Logging项目</p>
+  <div class="ongoing-container">
+    <!-- 模块头部 -->
+    <div class="module-header">
+      <span class="module-tag warning">ACTIVE PROJECTS</span>
+      <span class="module-code">PROJ_SYS_v2.1</span>
+    </div>
+    
+    <!-- 项目列表 -->
+    <div class="project-section">
+      <div class="project-card">
+        <div class="project-header">
+          <span class="project-id">PROJ-001</span>
+          <span class="project-status active">● IN PROGRESS</span>
+        </div>
+        <h3 class="project-title" v-scramble>明日方舟电子通行证简易版</h3>
+        <div class="project-meta">
+          <span class="meta-tag">TYPE: WEB APP</span>
+          <span class="meta-tag">PROGRESS: 45%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 45%"></div>
+        </div>
+      </div>
+      
+      <div class="project-card">
+        <div class="project-header">
+          <span class="project-id">PROJ-002</span>
+          <span class="project-status active">● IN PROGRESS</span>
+        </div>
+        <h3 class="project-title" v-scramble>IoT Life Logging项目</h3>
+        <div class="project-meta">
+          <span class="meta-tag">TYPE: IoT</span>
+          <span class="meta-tag">PROGRESS: 30%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 30%"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 统计装饰 -->
+    <div class="stats-footer">
+      <div class="stat-item">
+        <span class="stat-label">TOTAL</span>
+        <span class="stat-value">02</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">STATUS</span>
+        <span class="stat-value active-text">ACTIVE</span>
+      </div>
+      <svg width="120" height="20" xmlns="http://www.w3.org/2000/svg">
+        <g opacity="0.4">
+          <rect x="0" width="2" height="15" fill="#F4D03F"/>
+          <rect x="4" width="1" height="15" fill="#F4D03F"/>
+          <rect x="7" width="3" height="15" fill="#F4D03F"/>
+          <rect x="12" width="1" height="15" fill="#F4D03F"/>
+          <rect x="15" width="2" height="15" fill="#F4D03F"/>
+        </g>
+      </svg>
+    </div>
   </div>
 </template>
+
 <script>
 export default {
   name: 'OngoingProjects'
 }
 </script>
+
+<style scoped>
+.ongoing-container {
+  position: relative;
+  padding: 1rem 0;
+}
+
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(244, 208, 63, 0.3);
+}
+
+.module-tag {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #61b1d6;
+  padding: 3px 8px;
+  background: rgba(97, 177, 214, 0.1);
+  border: 1px solid #61b1d6;
+}
+
+.module-tag.warning {
+  color: #F4D03F;
+  background: rgba(244, 208, 63, 0.1);
+  border-color: #F4D03F;
+}
+
+.module-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.1em;
+}
+
+.project-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.project-card {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid #61b1d6;
+  transition: all 0.3s ease;
+  clip-path: polygon(
+    10px 0,
+    100% 0,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0 100%,
+    0 10px
+  );
+}
+
+.project-card:hover {
+  background: rgba(97, 177, 214, 0.05);
+  border-left-color: #F4D03F;
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.project-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: rgba(97, 177, 214, 0.6);
+  letter-spacing: 0.1em;
+}
+
+.project-status {
+  font-size: 0.65rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em;
+}
+
+.project-status.active {
+  color: #4ade80;
+  animation: status-pulse 2s infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.project-title {
+  font-size: 1.1rem;
+  color: #fff;
+  margin: 0 0 0.8rem 0;
+  font-weight: 500;
+}
+
+.project-meta {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.meta-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #61b1d6, #F4D03F);
+  animation: progress-glow 2s ease-in-out infinite;
+}
+
+@keyframes progress-glow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.stats-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.1em;
+}
+
+.stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #61b1d6;
+}
+
+.active-text {
+  color: #4ade80;
+}
+</style>
