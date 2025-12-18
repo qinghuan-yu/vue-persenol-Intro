@@ -11,6 +11,27 @@
     </div>
     <div class="menu-trigger" @click="toggleSidebar" ref="menuTriggerRef" style="opacity: 0; visibility: hidden;">MENU
     </div>
+    
+    <!-- 装饰性SVG元素 -->
+    <svg class="decoration-svg" xmlns="http://www.w3.org/2000/svg">
+      <!-- 左上角十字瞄准线 -->
+      <g class="crosshair" transform="translate(100, 100)">
+        <line x1="-20" y1="0" x2="20" y2="0" stroke="rgba(97, 177, 214, 0.3)" stroke-width="1"/>
+        <line x1="0" y1="-20" x2="0" y2="20" stroke="rgba(97, 177, 214, 0.3)" stroke-width="1"/>
+        <circle cx="0" cy="0" r="15" fill="none" stroke="rgba(97, 177, 214, 0.3)" stroke-width="1"/>
+      </g>
+      
+      <!-- 右下角动态三角形 -->
+      <g class="triangle-deco" transform="translate(-100, -100)">
+        <polygon points="0,0 30,0 15,25" fill="none" stroke="rgba(97, 177, 214, 0.4)" stroke-width="1" class="triangle-1"/>
+        <polygon points="0,0 30,0 15,25" fill="none" stroke="rgba(97, 177, 214, 0.2)" stroke-width="1" class="triangle-2" transform="scale(1.3)"/>
+      </g>
+      
+      <!-- 装饰性连接线（从中心到边缘） -->
+      <line class="connect-line" x1="50%" y1="50%" x2="95%" y2="20%" stroke="rgba(97, 177, 214, 0.15)" stroke-width="1" stroke-dasharray="5,5"/>
+      <circle class="pulse-dot" cx="95%" cy="20%" r="3" fill="rgba(97, 177, 214, 0.6)"/>
+    </svg>
+    
     <section id="main-stage" @click="handleStageClick">
       <div v-if="isIntroPlaying" ref="loaderTextRef" class="loader-container">
         <div class="loader-text-zh">神经元连接中</div>
@@ -21,7 +42,16 @@
         <div v-for="(item, index) in rightNavItems" :key="index"
           :class="['nav-node', { active: currentRoute === item.to }]" @click="navigate(item.to)">
           <div class="nav-label"><span class="zh">{{ item.name }}</span><span class="en">{{ item.en_name }}</span></div>
-          <div class="nav-node-circle"></div>
+          <svg class="nav-node-svg" width="16" height="16" viewBox="0 0 16 16">
+            <polygon class="nav-polygon" points="8,2 14,6 12,14 4,14 2,6" 
+              fill="rgba(10, 10, 10, 0.8)" 
+              stroke="rgba(255, 255, 255, 0.3)" 
+              stroke-width="1"/>
+            <polygon class="nav-polygon-glow" points="8,2 14,6 12,14 4,14 2,6" 
+              fill="none" 
+              stroke="rgba(97, 177, 214, 0)" 
+              stroke-width="2"/>
+          </svg>
         </div>
       </div>
       <div class="content-card" ref="contentCardRef">
@@ -33,7 +63,33 @@
           <div class="status-row">
             <div class="status-dot"></div><span class="status-text">SYSTEM // ONLINE</span>
           </div>
-          <h1 class="glitch-title">I am Relic<br><span style="color: var(--color-accent);">I am Ark</span></h1>
+          <div class="title-wrapper">
+            <svg class="title-border" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120">
+              <!-- 切角边框路径 -->
+              <path class="border-path" d="M 20,0 L 380,0 L 400,20 L 400,100 L 380,120 L 20,120 L 0,100 L 0,20 Z" 
+                fill="none" 
+                stroke="rgba(97, 177, 214, 0.4)" 
+                stroke-width="1"/>
+              <path class="border-glow" d="M 20,0 L 380,0 L 400,20 L 400,100 L 380,120 L 20,120 L 0,100 L 0,20 Z" 
+                fill="none" 
+                stroke="rgba(97, 177, 214, 0.8)" 
+                stroke-width="2"/>
+              <!-- 装饰性条形码 -->
+              <g class="barcode" transform="translate(10, 105)" opacity="0.2">
+                <rect x="0" width="2" height="10" fill="#61b1d6"/>
+                <rect x="4" width="1" height="10" fill="#61b1d6"/>
+                <rect x="7" width="3" height="10" fill="#61b1d6"/>
+                <rect x="12" width="1" height="10" fill="#61b1d6"/>
+                <rect x="15" width="2" height="10" fill="#61b1d6"/>
+                <rect x="19" width="1" height="10" fill="#61b1d6"/>
+                <rect x="22" width="3" height="10" fill="#61b1d6"/>
+              </g>
+            </svg>
+            <h1 class="glitch-title" data-text="I am Relic">
+              I am Relic<br>
+              <span class="glitch-accent" data-text="I am Ark">I am Ark</span>
+            </h1>
+          </div>
         </div>
         <div class="clipper-box" ref="clipperRef" style="overflow: hidden; position: relative;">
           <div ref="innerWrapperRef" style="position: relative;">
@@ -74,6 +130,10 @@ const loaderTextRef = ref(null);
 const isIntroPlaying = ref(true);
 const isSidebarOpen = ref(false);
 let isThrottled = false; // 用于滚轮节流
+
+// 视差效果状态
+const mouseX = ref(0);
+const mouseY = ref(0);
 // --- 动画逻辑 ---
 // 1. 离开动画
 const onLeave = (el, done) => {
@@ -157,6 +217,7 @@ onMounted(async () => {
     .to(innerWrapperRef.value, { autoAlpha: 1, duration: 0.5 })
     .to([sidebarRef.value, menuTriggerRef.value, timelineBarRef.value, cardHeaderRef.value], { autoAlpha: 1, duration: 0.5, stagger: 0.1 });
   window.addEventListener('resize', handleResize);
+  window.addEventListener('mousemove', handleMouseMove);
 });
 watch(route, (newRoute) => {
   if (!morphToShapes) return;
@@ -194,12 +255,37 @@ watch(route, (newRoute) => {
 onUnmounted(() => {
   destroy();
   window.removeEventListener('resize', handleResize);
+  window.removeEventListener('mousemove', handleMouseMove);
 });
 const handleResize = () => {
   if (!isIntroPlaying.value && clipperRef.value && innerWrapperRef.value) {
     clipperRef.value.style.height = 'auto';
   }
 }
+
+// 鼠标移动视差效果
+const handleMouseMove = (e) => {
+  if (isIntroPlaying.value || !contentCardRef.value) return;
+  
+  const { clientX, clientY } = e;
+  const { innerWidth, innerHeight } = window;
+  
+  // 将鼠标位置归一化到 -1 到 1 的范围
+  mouseX.value = (clientX / innerWidth - 0.5) * 2;
+  mouseY.value = (clientY / innerHeight - 0.5) * 2;
+  
+  // 计算视差偏移量（反向移动，增加纵深感）
+  const offsetX = mouseX.value * -20; // 最大偏移 20px
+  const offsetY = mouseY.value * -20;
+  
+  // 使用 GSAP 实现平滑过渡
+  gsap.to(contentCardRef.value, {
+    x: offsetX,
+    y: offsetY,
+    duration: 0.5,
+    ease: 'power2.out'
+  });
+};
 // --- 导航逻辑 ---
 const currentRoute = computed(() => route.path);
 const rightNavItems = computed(() => {
@@ -459,16 +545,67 @@ body {
   align-items: center;
   justify-content: flex-end;
   width: 100%;
-  padding-right: 47px;
+  padding-right: 42px;
 }
-.nav-node-circle {
-  width: 7px;
-  height: 7px;
-  background: #111;
-  border: 1px solid #444;
-  border-radius: 50%;
-  transition: all 0.3s ease;
+
+.nav-node-svg {
+  position: relative;
   z-index: 2;
+  transition: transform 0.3s ease;
+}
+
+.nav-polygon {
+  transition: all 0.3s ease;
+}
+
+.nav-polygon-glow {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transition: all 0.3s ease;
+}
+
+.nav-node:hover .nav-node-svg {
+  transform: rotate(72deg);
+}
+
+.nav-node:hover .nav-polygon {
+  fill: rgba(97, 177, 214, 0.1);
+  stroke: rgba(97, 177, 214, 0.8);
+}
+
+.nav-node:hover .nav-polygon-glow {
+  stroke: rgba(97, 177, 214, 1);
+  stroke-dashoffset: 0;
+  animation: stroke-flow 1.5s linear infinite;
+}
+
+@keyframes stroke-flow {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.nav-node.active {
+  padding-right: 39px;
+}
+
+.nav-node.active .nav-node-svg {
+  transform: scale(1.3);
+}
+
+.nav-node.active .nav-polygon {
+  fill: rgba(97, 177, 214, 0.2);
+  stroke: rgba(97, 177, 214, 1);
+  filter: drop-shadow(0 0 5px rgba(97, 177, 214, 0.6));
+}
+
+.nav-node.active .nav-polygon-glow {
+  stroke: rgba(97, 177, 214, 1);
+  stroke-dashoffset: 0;
+  animation: stroke-flow 2s linear infinite;
 }
 .nav-label {
   position: absolute;
@@ -515,7 +652,81 @@ body {
   opacity: 1;
   transform: translateX(0);
 }
-/* 内容卡片 */
+
+/* 装饰性SVG元素 */
+.decoration-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  overflow: visible;
+}
+
+.crosshair {
+  animation: rotate-crosshair 10s linear infinite;
+}
+
+@keyframes rotate-crosshair {
+  0% { transform: translate(100px, 100px) rotate(0deg); }
+  100% { transform: translate(100px, 100px) rotate(360deg); }
+}
+
+.triangle-deco {
+  position: absolute;
+  right: 100px;
+  bottom: 100px;
+}
+
+.triangle-1 {
+  animation: triangle-pulse 2s ease-in-out infinite;
+}
+
+.triangle-2 {
+  animation: triangle-pulse 2s ease-in-out infinite 1s;
+}
+
+@keyframes triangle-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+.connect-line {
+  animation: dash-flow 3s linear infinite;
+}
+
+@keyframes dash-flow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -20;
+  }
+}
+
+.pulse-dot {
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 100% {
+    r: 3;
+    opacity: 0.6;
+  }
+  50% {
+    r: 5;
+    opacity: 1;
+  }
+}
+/* 内容卡片 - 使用切角设计 */
 .content-card {
   box-sizing: border-box;
   background: rgba(10, 10, 10, 0.6);
@@ -528,6 +739,17 @@ body {
   z-index: 10;
   transition: border-color 0.3s;
   overflow: visible;
+  /* 使用 clip-path 实现切角 */
+  clip-path: polygon(
+    20px 0,           /* 左上切角 */
+    calc(100% - 20px) 0,  /* 右上切角 */
+    100% 20px,
+    100% calc(100% - 20px), /* 右下切角 */
+    calc(100% - 20px) 100%,
+    20px 100%,        /* 左下切角 */
+    0 calc(100% - 20px),
+    0 20px
+  );
 }
 .content-card:hover {
   border-color: rgba(255, 255, 255, 0.3);
@@ -539,41 +761,49 @@ body {
   position: relative;
   will-change: height;
 }
-/* 角落装饰 */
+/* 角落装饰 - 改为45度切角线条 */
 .corner {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  border-color: #fff;
+  width: 20px;
+  height: 20px;
+  border-color: var(--color-accent);
   border-style: solid;
-  opacity: 0.3;
+  opacity: 0.4;
   transition: all 0.3s;
+  border-width: 0;
 }
 .tl {
-  top: -1px;
-  left: -1px;
-  border-width: 1px 0 0 1px;
+  top: 0;
+  left: 0;
+  border-left: 2px solid var(--color-accent);
+  border-top: 2px solid var(--color-accent);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
 }
 .tr {
-  top: -1px;
-  right: -1px;
-  border-width: 1px 1px 0 0;
+  top: 0;
+  right: 0;
+  border-right: 2px solid var(--color-accent);
+  border-top: 2px solid var(--color-accent);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
 }
 .bl {
-  bottom: -1px;
-  left: -1px;
-  border-width: 0 0 1px 1px;
+  bottom: 0;
+  left: 0;
+  border-left: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
 }
 .br {
-  bottom: -1px;
-  right: -1px;
-  border-width: 0 1px 1px 0;
+  bottom: 0;
+  right: 0;
+  border-right: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
 .content-card:hover .corner {
-  width: 15px;
-  height: 15px;
+  width: 30px;
+  height: 30px;
   opacity: 1;
-  border-color: var(--color-accent);
 }
 /* 状态与文本 */
 .status-row {
@@ -606,12 +836,206 @@ body {
     opacity: 0.3;
   }
 }
+
+/* 标题边框容器 */
+.title-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.title-border {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 120px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.border-path {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: draw-border 2s ease-out forwards;
+  animation-delay: 0.5s;
+}
+
+.border-glow {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: draw-border 2s ease-out forwards;
+  animation-delay: 0.5s;
+  filter: blur(3px);
+}
+
+@keyframes draw-border {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.barcode {
+  animation: barcode-flicker 3s infinite;
+}
+
+@keyframes barcode-flicker {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.4; }
+}
+
 .glitch-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 3rem;
   margin: 0 0 1rem 0;
   line-height: 0.9;
   color: #fff;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.glitch-title::before,
+.glitch-title::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glitch-title::before {
+  color: #ff00ff;
+  z-index: -1;
+  animation: glitch-1 0s linear infinite;
+}
+
+.glitch-title::after {
+  color: #00ffff;
+  z-index: -2;
+  animation: glitch-2 0s linear infinite;
+}
+
+.glitch-title:hover::before {
+  animation: glitch-1 0.3s linear infinite;
+}
+
+.glitch-title:hover::after {
+  animation: glitch-2 0.3s linear infinite;
+}
+
+.glitch-accent {
+  color: var(--color-accent);
+  position: relative;
+  display: inline-block;
+}
+
+.glitch-accent::before,
+.glitch-accent::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glitch-accent::before {
+  color: #ff00ff;
+  z-index: -1;
+  animation: glitch-1 0s linear infinite;
+}
+
+.glitch-accent::after {
+  color: #00ffff;
+  z-index: -2;
+  animation: glitch-2 0s linear infinite;
+}
+
+.glitch-title:hover .glitch-accent::before {
+  animation: glitch-1 0.3s linear infinite;
+}
+
+.glitch-title:hover .glitch-accent::after {
+  animation: glitch-2 0.3s linear infinite;
+}
+
+@keyframes glitch-1 {
+  0% {
+    opacity: 1;
+    transform: translate(0);
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  }
+  5% {
+    opacity: 1;
+    transform: translate(-3px, 2px);
+    clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(3px, -2px);
+    clip-path: polygon(0 0, 100% 0, 100% 20%, 0 20%);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-2px, -3px);
+    clip-path: polygon(0 80%, 100% 80%, 100% 100%, 0 100%);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(2px, 3px);
+    clip-path: polygon(0 40%, 100% 40%, 100% 70%, 0 70%);
+  }
+  25% {
+    opacity: 0;
+    transform: translate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0);
+  }
+}
+
+@keyframes glitch-2 {
+  0% {
+    opacity: 1;
+    transform: translate(0);
+    clip-path: polygon(0 0, 100% 0, 100% 30%, 0 30%);
+  }
+  5% {
+    opacity: 1;
+    transform: translate(2px, -3px);
+    clip-path: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-3px, 2px);
+    clip-path: polygon(0 10%, 100% 10%, 100% 40%, 0 40%);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(3px, 3px);
+    clip-path: polygon(0 50%, 100% 50%, 100% 90%, 0 90%);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-2px, -2px);
+    clip-path: polygon(0 0, 100% 0, 100% 25%, 0 25%);
+  }
+  25% {
+    opacity: 0;
+    transform: translate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0);
+  }
 }
 /* 底部栏 */
 .bottom-bar {
