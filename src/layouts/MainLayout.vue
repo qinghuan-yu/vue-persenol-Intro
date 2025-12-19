@@ -10,6 +10,7 @@
           class="sidebar-sub">CONTACT</span></router-link>
     </div>
     <div class="menu-trigger" @click="toggleSidebar" ref="menuTriggerRef" style="opacity: 0; visibility: hidden;">
+      <span class="esc-hint">ESC</span>
       <svg class="menu-icon" width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
         <!-- 切角外框 -->
         <path class="menu-frame" d="M 8,0 L 52,0 L 60,8 L 60,52 L 52,60 L 8,60 L 0,52 L 0,8 Z" 
@@ -136,6 +137,17 @@
       </div>
     </section>
     <div class="bottom-bar"></div>
+    
+    <!-- 自定义光标 -->
+    <div class="custom-cursor" ref="cursorRef">
+      <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+        <!-- 纯蓝色圆环 -->
+        <circle cx="14" cy="14" r="12" 
+          fill="none" 
+          stroke="rgba(97, 177, 214, 0.8)" 
+          stroke-width="2"/>
+      </svg>
+    </div>
   </div>
 </template>
 <script setup>
@@ -159,6 +171,7 @@ const cardHeaderRef = ref(null);
 const clipperRef = ref(null);
 const innerWrapperRef = ref(null);
 const loaderTextRef = ref(null);
+const cursorRef = ref(null);
 // State
 const isIntroPlaying = ref(true);
 const isSidebarOpen = ref(false);
@@ -167,6 +180,10 @@ let isThrottled = false; // 用于滚轮节流
 // 视差效果状态
 const mouseX = ref(0);
 const mouseY = ref(0);
+
+// 自定义光标位置
+const cursorX = ref(0);
+const cursorY = ref(0);
 // --- 动画逻辑 ---
 // 1. 离开动画
 const onLeave = (el, done) => {
@@ -251,6 +268,8 @@ onMounted(async () => {
     .to([sidebarRef.value, menuTriggerRef.value, timelineBarRef.value, cardHeaderRef.value], { autoAlpha: 1, duration: 0.5, stagger: 0.1 });
   window.addEventListener('resize', handleResize);
   window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mousemove', updateCursorPosition);
+  window.addEventListener('keydown', handleKeyDown);
 });
 watch(route, (newRoute, oldRoute) => {
   if (!morphToShapes) return;
@@ -298,12 +317,36 @@ onUnmounted(() => {
   destroy();
   window.removeEventListener('resize', handleResize);
   window.removeEventListener('mousemove', handleMouseMove);
+  window.removeEventListener('mousemove', updateCursorPosition);
+  window.removeEventListener('keydown', handleKeyDown);
 });
 const handleResize = () => {
   if (!isIntroPlaying.value && clipperRef.value && innerWrapperRef.value) {
     clipperRef.value.style.height = 'auto';
   }
 }
+
+// 更新自定义光标位置
+const updateCursorPosition = (e) => {
+  cursorX.value = e.clientX;
+  cursorY.value = e.clientY;
+  
+  if (cursorRef.value) {
+    gsap.to(cursorRef.value, {
+      x: e.clientX,
+      y: e.clientY,
+      duration: 0.15,
+      ease: 'power2.out'
+    });
+  }
+};
+
+// 处理键盘事件（ESC键触发菜单）
+const handleKeyDown = (e) => {
+  if (e.key === 'Escape' || e.key === 'Esc') {
+    toggleSidebar();
+  }
+};
 
 // 鼠标移动视差效果
 const handleMouseMove = (e) => {
@@ -381,6 +424,10 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--color-bg);
+  cursor: none !important; /* 强制隐藏默认光标 */
+}
+* {
+  cursor: none !important; /* 确保所有元素都不显示默认光标 */
 }
 #app-layout {
   font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
@@ -532,6 +579,16 @@ body {
   opacity: 0.85;
 }
 
+.esc-hint {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+  margin-bottom: -4px;
+}
+
 .menu-trigger:hover {
   opacity: 1;
   transform: translateY(-2px);
@@ -596,6 +653,10 @@ body {
 .menu-trigger:hover .menu-label {
   color: #F4D03F;
   text-shadow: 0 0 8px rgba(244, 208, 63, 0.5);
+}
+
+.menu-trigger:hover .esc-hint {
+  color: rgba(255, 255, 255, 0.8);
 }
 /* 主舞台 */
 #main-stage {
@@ -1147,5 +1208,28 @@ body {
   align-items: center;
   z-index: 10;
   pointer-events: none;
+}
+
+/* 自定义光标 */
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+}
+
+.custom-cursor svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* 隐藏光标时（如在加载页面） */
+.custom-cursor.hidden {
+  opacity: 0;
 }
 </style>

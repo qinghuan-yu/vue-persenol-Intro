@@ -22,8 +22,8 @@ const PARTICLE_SIZE_MAX = isMobile ? 2.0 : 2.2;
 
 // --- 神经网络 (NETWORK) 呼吸动画配置 ---
 const NETWORK_CONFIG = {
-    MAX_COUNT: isMobile ? 150 : 300,        // 网络节点最大数量
-    MAX_DIST: isMobile ? 150 : 200,         // 最大连线距离
+    MAX_COUNT: isMobile ? 150 : 300,        // 网络节点最大数
+    MAX_DIST: isMobile ? 150 : 300,         // 最大连线距离
     GROWTH_TIME: 4000,                      // 初始加载：从0增长到最大值的时间 (ms)
     
     // 呼吸波动配置 (正弦波)
