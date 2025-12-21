@@ -138,15 +138,9 @@
     </section>
     <div class="bottom-bar"></div>
     
-    <!-- 自定义光标 -->
+    <!-- 自定义光标 - 使用外部SVG文件 -->
     <div class="custom-cursor" ref="cursorRef">
-      <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-        <!-- 纯蓝色圆环 -->
-        <circle cx="14" cy="14" r="12" 
-          fill="none" 
-          stroke="rgba(97, 177, 214, 0.8)" 
-          stroke-width="2"/>
-      </svg>
+      <img :src="cursorSvg" alt="cursor" />
     </div>
   </div>
 </template>
@@ -157,6 +151,7 @@ import gsap from 'gsap';
 import { usePixiApp } from '../composables/usePixiApp.js';
 import qqQrCode from '@/assets/QQ.png';
 import wechatQrCode from '@/assets/WeChat.png';
+import cursorSvg from '@/assets/cursor.svg';
 const router = useRouter();
 const route = useRoute();
 const { init, destroy } = usePixiApp();
@@ -326,18 +321,14 @@ const handleResize = () => {
   }
 }
 
-// 更新自定义光标位置
+// 更新自定义光标位置 - 使用纯CSS transform，无GSAP依赖
 const updateCursorPosition = (e) => {
   cursorX.value = e.clientX;
   cursorY.value = e.clientY;
   
   if (cursorRef.value) {
-    gsap.to(cursorRef.value, {
-      x: e.clientX,
-      y: e.clientY,
-      duration: 0.15,
-      ease: 'power2.out'
-    });
+    // 使用 CSS transform + will-change 实现硬件加速
+    cursorRef.value.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
   }
 };
 
@@ -1215,21 +1206,24 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   pointer-events: none;
   z-index: 99999;
-  transform: translate(-50%, -50%);
-  transition: opacity 0.3s ease;
+  /* 使用 will-change 优化性能，启用GPU硬件加速 */
+  will-change: transform;
+  filter: drop-shadow(0 0 3px rgba(97, 177, 214, 0.3));
 }
 
-.custom-cursor svg {
+.custom-cursor img {
   width: 100%;
   height: 100%;
+  display: block;
 }
 
 /* 隐藏光标时（如在加载页面） */
 .custom-cursor.hidden {
   opacity: 0;
+  transition: opacity 0.3s ease;
 }
 </style>
