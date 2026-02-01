@@ -177,7 +177,7 @@ import DecorationBarcode from '@/components/DecorationBarcode.vue';
 
 .icon-text {
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 500;
   color: #61b1d6;
 }
 

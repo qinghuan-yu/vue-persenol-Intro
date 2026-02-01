@@ -1,1121 +1,395 @@
 <template>
-  <div id="app-layout" @wheel.prevent="handleWheel">
-    <div ref="pixiContainer" id="pixi-container"></div>
-    <div :class="['sidebar', { open: isSidebarOpen }]" ref="sidebarRef" style="opacity: 0; visibility: hidden;">
-      <div class="sidebar-line"></div>
-      <router-link to="/intro" class="sidebar-item" @click="closeSidebar"><span>介绍</span><span class="sidebar-sub">INTRO</span></router-link>
-      <router-link to="/collab" class="sidebar-item" @click="closeSidebar"><span>合作</span><span
-          class="sidebar-sub">COLLAB</span></router-link>
-      <router-link to="/contact" class="sidebar-item" @click="closeSidebar"><span>联系方式</span><span
-          class="sidebar-sub">CONTACT</span></router-link>
-    </div>
-    <div class="menu-trigger" @click="toggleSidebar" ref="menuTriggerRef" style="opacity: 0; visibility: hidden;">
-      <span class="esc-hint">ESC</span>
-      <svg class="menu-icon" width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-        <!-- 切角外框 -->
-        <path class="menu-frame" d="M 8,0 L 52,0 L 60,8 L 60,52 L 52,60 L 8,60 L 0,52 L 0,8 Z" 
-          fill="rgba(10, 10, 10, 0.8)" 
-          stroke="rgba(97, 177, 214, 0.6)" 
-          stroke-width="1.5"/>
-        
-        <!-- 装饰性角标 -->
-        <rect x="50" y="4" width="6" height="2" fill="#F4D03F" opacity="0.9"/>
-        <rect x="4" y="54" width="4" height="2" fill="#F4D03F" opacity="0.8"/>
-        
-        <!-- 汉堡菜单线条 -->
-        <g class="menu-lines">
-          <line x1="18" y1="24" x2="42" y2="24" stroke="#61b1d6" stroke-width="2" stroke-linecap="round"/>
-          <line x1="18" y1="30" x2="42" y2="30" stroke="#61b1d6" stroke-width="2" stroke-linecap="round"/>
-          <line x1="18" y1="36" x2="42" y2="36" stroke="#61b1d6" stroke-width="2" stroke-linecap="round"/>
-        </g>
-        
-        <!-- 装饰性扫描线 -->
-        <line class="scan-line" x1="0" y1="30" x2="60" y2="30" stroke="rgba(244, 208, 63, 0.4)" stroke-width="1"/>
-      </svg>
-      <span class="menu-label">MENU</span>
-    </div>
-    
-    <AppDecoration />
-    
-    <section id="main-stage" @click="handleStageClick">
-      <div v-if="isIntroPlaying" ref="loaderTextRef" class="loader-container">
-        <div class="loader-text-zh">神经元连接中</div>
-        <div class="loader-text-en">NEURAL CONNECTION ESTABLISHING</div>
-      </div>
-      <div class="timeline-bar" ref="timelineBarRef" style="opacity: 0; visibility: hidden;">
-        <div class="timeline-line"></div>
-        <transition-group name="nav-node-transition" tag="div" class="nav-nodes-container">
-          <div v-for="(item, index) in rightNavItems" :key="item.to"
-            :class="['nav-node', { active: currentRoute === item.to }]" 
-            @click="navigate(item.to)"
-            :style="{ '--node-index': index }">
-            <div class="nav-label"><span class="zh">{{ item.name }}</span><span class="en">{{ item.en_name }}</span></div>
-            <svg class="nav-node-svg" width="16" height="16" viewBox="0 0 16 16">
-              <polygon class="nav-polygon" points="8,2 14,6 12,14 4,14 2,6" 
-                fill="rgba(10, 10, 10, 0.8)" 
-                stroke="rgba(255, 255, 255, 0.3)" 
-                stroke-width="1"/>
-              <polygon class="nav-polygon-glow" points="8,2 14,6 12,14 4,14 2,6" 
-                fill="none" 
-                stroke="rgba(97, 177, 214, 0)" 
-                stroke-width="2"/>
-            </svg>
-          </div>
-        </transition-group>
-      </div>
-      <div class="content-card" ref="contentCardRef">
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
-        <div class="card-header" ref="cardHeaderRef" style="opacity: 0; visibility: hidden;">
-          <div class="status-row">
-            <div class="status-dot"></div><span class="status-text">SYSTEM // ONLINE</span>
-          </div>
-          <div class="title-wrapper">
-            <svg class="title-border" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120">
-              <!-- 切角边框路径 -->
-              <path class="border-path" d="M 20,0 L 380,0 L 400,20 L 400,100 L 380,120 L 20,120 L 0,100 L 0,20 Z" 
-                fill="none" 
-                stroke="rgba(97, 177, 214, 0.4)" 
-                stroke-width="1"/>
-              <path class="border-glow" d="M 20,0 L 380,0 L 400,20 L 400,100 L 380,120 L 20,120 L 0,100 L 0,20 Z" 
-                fill="none" 
-                stroke="rgba(97, 177, 214, 0.8)" 
-                stroke-width="2"/>
-              <!-- 黄色装饰色块 -->
-              <rect x="370" y="5" width="20" height="4" fill="#F4D03F" opacity="0.9">
-                <animate attributeName="opacity" values="0.9;0.6;0.9" dur="2s" repeatCount="indefinite"/>
-              </rect>
-              <rect x="5" y="111" width="15" height="4" fill="#F4D03F" opacity="0.8"/>
-              <!-- 装饰性条形码 -->
-              <g class="barcode" transform="translate(10, 105)" opacity="0.2">
-                <rect x="0" width="2" height="10" fill="#61b1d6"/>
-                <rect x="4" width="1" height="10" fill="#61b1d6"/>
-                <rect x="7" width="3" height="10" fill="#61b1d6"/>
-                <rect x="12" width="1" height="10" fill="#61b1d6"/>
-                <rect x="15" width="2" height="10" fill="#61b1d6"/>
-                <rect x="19" width="1" height="10" fill="#61b1d6"/>
-                <rect x="22" width="3" height="10" fill="#61b1d6"/>
-              </g>
-              <!-- 系统信息微文本 -->
-              <text x="320" y="113" font-size="8" fill="rgba(255, 255, 255, 0.3)" font-family="monospace">VER. 2.0.45</text>
-            </svg>
-            <h1 class="glitch-title" data-text="I am Relic">
-              I am Relic<br>
-              <span class="glitch-accent" data-text="I am Ark">I am Ark</span>
-            </h1>
-          </div>
+  <div class="app-container">
+    <!-- Global Static Background -->
+    <div class="cross-grid-background"></div>
+    <div class="scan-effect"></div>
+
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+      <div class="nav-left">
+        <div class="brand">
+          <span class="brand-name">RELIC</span>
+          <span class="brand-sub">Data Hub</span>
         </div>
-        <div class="clipper-box" ref="clipperRef" style="overflow: hidden; position: relative;">
-          <div ref="innerWrapperRef" style="position: relative;">
-            <router-view v-slot="{ Component }">
-              <transition :css="false" mode="out-in" @leave="onLeave" @enter="onEnter">
-                <component :is="Component" :key="route.path" />
-              </transition>
-            </router-view>
-          </div>
+        <div class="nav-divider"></div>
+        <div class="nav-links">
+          <router-link to="/intro/personal" class="nav-item">
+            <span class="item-label">IDENTITY</span>
+            <span class="item-sub">身份</span>
+          </router-link>
+          <router-link to="/intro/ongoing" class="nav-item">
+            <span class="item-label">PROJECTS</span>
+            <span class="item-sub">项目</span>
+          </router-link>
+          <router-link to="/intro/skills" class="nav-item">
+            <span class="item-label">CAPABILITY</span>
+            <span class="item-sub">能力</span>
+          </router-link>
+          <router-link to="/intro/finished" class="nav-item">
+            <span class="item-label">ARCHIVE</span>
+            <span class="item-sub">档案</span>
+          </router-link>
         </div>
       </div>
-    </section>
-    <div class="bottom-bar"></div>
-    
-    <AppCursor />
+
+      <div class="nav-right">
+        <a href="https://github.com/qinghuan-yu" target="_blank" class="icon-link">GITHUB</a>
+        <a href="mailto:Reliarc.me@outlook.com" class="icon-link">MAIL</a>
+      </div>
+    </nav>
+
+    <!-- 右侧进度条 -->
+    <div class="right-sidebar">
+      <div class="page-number">
+        <transition name="num-slide" mode="out-in">
+          <span :key="currentPageIndex" class="current-num dark-cyan">{{ currentPageIndex }}</span>
+        </transition>
+      </div>
+      <div class="progress-track">
+        <div class="progress-indicator" :style="{ top: indicatorPosition }">
+          <div class="indicator-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <router-view v-slot="{ Component, route }">
+        <transition 
+          name="parallax" 
+          mode="out-in"
+          @before-enter="(el) => console.log('Transition Start:', el)"
+          @enter="(el) => console.log('Transition Enter:', el)"
+        >
+          <component :is="Component" :key="route.fullPath" />
+        </transition>
+      </router-view>
+    </main>
+
+    <footer class="app-footer">
+      © 2026 RELIC-ARK ARCHIVE // JUFE COMPUTER SCIENCE // STATUS: AUTHORIZED
+    </footer>
   </div>
 </template>
+
 <script setup>
-import AppDecoration from './components/AppDecoration.vue';
-import AppCursor from './components/AppCursor.vue';
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import gsap from 'gsap';
-import { usePixiApp } from '../composables/usePixiApp.js';
-import qqQrCode from '@/assets/QQ.png';
-import wechatQrCode from '@/assets/WeChat.png';
-// import cursorSvg from '@/assets/cursor.svg'; // 已在 AppCursor 组件中引用，此处不再需要
+import { computed, onMounted, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-const router = useRouter();
 const route = useRoute();
-const { init, destroy } = usePixiApp();
-let morphToShapes = null;
-// Refs
-const pixiContainer = ref(null);
-const sidebarRef = ref(null);
-const menuTriggerRef = ref(null);
-const timelineBarRef = ref(null);
-const contentCardRef = ref(null);
-const cardHeaderRef = ref(null);
-const clipperRef = ref(null);
-const innerWrapperRef = ref(null);
-const loaderTextRef = ref(null);
-// const cursorRef = ref(null); // 移至 AppCursor
+const router = useRouter();
 
-// State
-const isIntroPlaying = ref(true);
-const isSidebarOpen = ref(false);
-let isThrottled = false; // 用于滚轮节流
+const routesOrder = ['/intro/personal', '/intro/ongoing', '/intro/skills', '/intro/finished'];
 
-// 视差效果状态
-const mouseX = ref(0);
-const mouseY = ref(0);
+let isNavigating = false;
 
-// const cursorX = ref(0); // 移至 AppCursor
-// const cursorY = ref(0); // 移至 AppCursor
-// --- 动画逻辑 ---
-// 1. 离开动画
-const onLeave = (el, done) => {
-  gsap.to(el, {
-    opacity: 0,
-    duration: 0.3,
-    ease: "power2.in",
-    onComplete: done
-  });
-};
-// 2. 进入动画
-const onEnter = (el, done) => {
-  gsap.set(el, { opacity: 0 });
+const handleWheel = (e) => {
+  if (isNavigating) return;
   
-  nextTick(() => {
-    document.fonts.ready.then(() => {
-      if (!clipperRef.value || !innerWrapperRef.value) { done(); return; }
-      
-      const startHeight = clipperRef.value.offsetHeight;
-      
-      // 使用 setTimeout 确保 vScramble 已完成同步高度设置
-      // 增加延迟时间，确保所有子组件的 mounted 钩子都已执行
-      setTimeout(() => {
-        // 临时设置为 auto 以计算最终高度
-        clipperRef.value.style.height = 'auto';
-        
-        // 等待一帧，让浏览器完成布局计算
-        requestAnimationFrame(() => {
-          // 使用 scrollHeight 获取包含所有内容的真实高度
-          const targetHeight = innerWrapperRef.value.scrollHeight;
-          
-          // 恢复起始高度
-          clipperRef.value.style.height = `${startHeight}px`;
-          
-          // 执行平滑过渡动画
-          const tl = gsap.timeline({
-            onComplete: () => {
-              // 不设置auto，保持固定高度，避免突变
-              // 高度会在窗口resize时自动调整
-              done();
-            }
-          });
-          
-          // 高度过渡（一次性到达最终高度）
-          tl.to(clipperRef.value, {
-            height: targetHeight,
-            duration: 0.5,
-            ease: "power3.inOut"
-          });
-          
-          // 透明度过渡
-          tl.to(el, {
-            opacity: 1,
-            duration: 0.4,
-            ease: "power2.out"
-          }, "-=0.2");
-        });
-      }, 50); // 增加延迟到 50ms，确保子组件 mounted 完成
-    });
-  });
-};
-// --- 生命周期与粒子系统 ---
-onMounted(async () => {
-  if (pixiContainer.value) {
-    const controls = await init(pixiContainer.value);
-    morphToShapes = controls.morphToShapes;
-  }
-  gsap.set([sidebarRef.value, menuTriggerRef.value, timelineBarRef.value, cardHeaderRef.value], { autoAlpha: 0 });
-  gsap.set(clipperRef.value, { height: 0 });
-  const introTl = gsap.timeline({
-    onComplete: () => {
-      isIntroPlaying.value = false;
-      // 不设置auto，保持固定高度，避免突变
-    }
-  });
-  introTl
-    .to(loaderTextRef.value, { autoAlpha: 0, duration: 0.5, delay: 1.5 })
-    .add(() => gsap.set(contentCardRef.value, { backgroundColor: 'rgba(10, 10, 10, 0.6)', backdropFilter: 'blur(5px)' }))
-    .to(contentCardRef.value, { borderTopColor: 'var(--border-tech)', borderBottomColor: 'var(--border-tech)', duration: 0.5 }, "<")
-    .to(clipperRef.value, { height: () => innerWrapperRef.value.scrollHeight, duration: 0.8, ease: 'power3.inOut' }, "<")
-    .to(innerWrapperRef.value, { autoAlpha: 1, duration: 0.5 })
-    .to([sidebarRef.value, menuTriggerRef.value, timelineBarRef.value, cardHeaderRef.value], { autoAlpha: 1, duration: 0.5, stagger: 0.1 });
-  window.addEventListener('resize', handleResize);
-  window.addEventListener('mousemove', handleMouseMove);
-  // window.addEventListener('mousemove', updateCursorPosition); // 移至 AppCursor
-  window.addEventListener('keydown', handleKeyDown);
-});
-watch(route, (newRoute, oldRoute) => {
-  if (!morphToShapes) return;
-  // 确保路由对象已就绪
-  if (!newRoute || !newRoute.path) return;
+  const currentPath = route.path;
+  const currentIndex = routesOrder.findIndex(p => currentPath.includes(p));
   
-  // 检测父路由切换（如从 /intro 切换到 /collab），自动关闭侧边栏
-  if (oldRoute && oldRoute.path) {
-    const oldSection = oldRoute.path.split('/')[1];
-    const newSection = newRoute.path.split('/')[1];
-    if (oldSection !== newSection && isSidebarOpen.value) {
-      isSidebarOpen.value = false;
-    }
-  }
-  
-  // Contact 页面：显示两个二维码粒子（左右两侧）+ 底部邮箱文字
-  if (newRoute.path.includes('/contact')) {
-    const shapes = [
-      {
-        source: 'Reliarc.me@outlook.com',
-        options: {
-          type: 'text',
-          fontSize: 60,
-          fontFamily: 'Arial, sans-serif',
-          color: '#61b1d6'
-        }
-      },
-      {
-        source: qqQrCode,
-        options: { type: 'image', scale: 1.0 }
-      },
-      {
-        source: wechatQrCode,
-        options: { type: 'image', scale: 1.0 }
-      }
-    ];
-    morphToShapes(shapes);
-  }
-  // 其他所有页面：清空粒子，回归网络背景
-  else {
-    morphToShapes([]);
-  }
-}, { immediate: true, deep: true });
-onUnmounted(() => {
-  destroy();
-  window.removeEventListener('resize', handleResize);
-  window.removeEventListener('mousemove', handleMouseMove);
-  // window.removeEventListener('mousemove', updateCursorPosition); // 移至 AppCursor
-  window.removeEventListener('keydown', handleKeyDown);
-});
-const handleResize = () => {
-  if (!isIntroPlaying.value && clipperRef.value && innerWrapperRef.value) {
-    clipperRef.value.style.height = 'auto';
-  }
-}
-
-// updateCursorPosition 移至 AppCursor
-
-// 处理键盘事件（ESC键触发菜单）
-const handleKeyDown = (e) => {
-  if (e.key === 'Escape' || e.key === 'Esc') {
-    toggleSidebar();
-  }
-};
-
-// 鼠标移动视差效果
-const handleMouseMove = (e) => {
-  if (isIntroPlaying.value || !contentCardRef.value) return;
-  
-  const { clientX, clientY } = e;
-  const { innerWidth, innerHeight } = window;
-  
-  // 将鼠标位置归一化到 -1 到 1 的范围
-  mouseX.value = (clientX / innerWidth - 0.5) * 2;
-  mouseY.value = (clientY / innerHeight - 0.5) * 2;
-  
-  // 计算视差偏移量（反向移动，增加纵深感）
-  const offsetX = mouseX.value * -20; // 最大偏移 20px
-  const offsetY = mouseY.value * -20;
-  
-  // 使用 GSAP 实现平滑过渡
-  gsap.to(contentCardRef.value, {
-    x: offsetX,
-    y: offsetY,
-    duration: 0.5,
-    ease: 'power2.out'
-  });
-};
-// --- 导航逻辑 ---
-const currentRoute = computed(() => route.path);
-const rightNavItems = computed(() => {
-  const section = route.path.split('/')[1];
-  if (section === 'intro') return [
-    { to: '/intro/personal', name: '个人', en_name: 'Personal' },
-    { to: '/intro/skills', name: '技能', en_name: 'Skills' },
-    { to: '/intro/ongoing', name: '项目', en_name: 'Ongoing' },
-    { to: '/intro/finished', name: '作品', en_name: 'Finished' },
-    { to: '/intro/links', name: '链接', en_name: 'Links' },
-  ];
-  if (section === 'collab') return [
-    { to: '/collab/music', name: '音乐', en_name: 'Music' },
-    { to: '/collab/dev', name: '开发', en_name: 'Dev' },
-  ];
-  return [];
-});
-const toggleSidebar = () => { if (!isIntroPlaying.value) isSidebarOpen.value = !isSidebarOpen.value; };
-const closeSidebar = () => { isSidebarOpen.value = false; };
-const handleStageClick = () => { if (isSidebarOpen.value) isSidebarOpen.value = false; };
-const navigate = (path) => { if (route.path !== path) router.push(path); };
-// 滚轮切换逻辑 (恢复了完整逻辑，修复了 unused vars 错误)
-const handleWheel = (event) => {
-  if (isSidebarOpen.value || isIntroPlaying.value) return;
-  if (isThrottled) return;
-  isThrottled = true;
-  setTimeout(() => { isThrottled = false; }, 500);
-  const navItems = rightNavItems.value;
-  if (navItems.length <= 1) return;
-  const currentIndex = navItems.findIndex(item => item.to === currentRoute.value);
   if (currentIndex === -1) return;
-  const direction = event.deltaY > 0 ? 1 : -1;
-  let nextIndex = currentIndex + direction;
-  if (nextIndex < 0) nextIndex = 0;
-  else if (nextIndex >= navItems.length) nextIndex = navItems.length - 1;
-  if (nextIndex !== currentIndex) navigate(navItems[nextIndex].to);
+
+  if (e.deltaY > 50) { // Scroll Down -> Next
+    if (currentIndex < routesOrder.length - 1) {
+      navigate(routesOrder[currentIndex + 1]);
+    }
+  } else if (e.deltaY < -50) { // Scroll Up -> Prev
+    if (currentIndex > 0) {
+      navigate(routesOrder[currentIndex - 1]);
+    }
+  }
 };
+
+const navigate = (path) => {
+  isNavigating = true;
+  router.push(path);
+  setTimeout(() => {
+    isNavigating = false;
+  }, 1000); // Debounce duration matching transition time
+};
+
+onMounted(() => {
+  window.addEventListener('wheel', handleWheel);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('wheel', handleWheel);
+});
+
+const currentPageIndex = computed(() => {
+  const path = route.path;
+  if (path.includes('personal')) return '01';
+  if (path.includes('ongoing')) return '02';
+  if (path.includes('skills')) return '03';
+  if (path.includes('finished') || path.includes('links')) return '04';
+  return '00';
+});
+
+const indicatorPosition = computed(() => {
+  const path = route.path;
+  if (path.includes('personal')) return '0%';
+  if (path.includes('ongoing')) return '33%';
+  if (path.includes('skills')) return '66%';
+  if (path.includes('finished') || path.includes('links')) return '100%';
+  return '0%';
+});
 </script>
-<style>
-/* 自定义字体 */
-@font-face {
-  font-family: 'Space Grotesk';
-  src: url('@/assets/SpaceGrotesk-VariableFont_wght.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-}
 
-@font-face {
-  font-family: 'Noto Sans SC';
-  src: url('@/assets/NotoSansSC-Medium.ttf') format('truetype');
-  font-weight: 500;
-  font-style: normal;
-}
-
-/* 全局变量 */
-:root {
-  --color-bg: #050505;
-  --color-text-main: #e6e6e6;
-  --color-text-dim: #666;
-  --color-accent: #61b1d6;
-  --color-warning: #F4D03F;
-  --border-tech: rgba(255, 255, 255, 0.15);
-  --sidebar-width: 360px;
-}
-body {
-  margin: 0;
-  padding: 0;
-  background-color: var(--color-bg);
-  cursor: none !important; /* 强制隐藏默认光标 */
-}
-* {
-  cursor: none !important; /* 确保所有元素都不显示默认光标 */
-}
-#app-layout {
-  font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif;
-  color: var(--color-text-main);
-  width: 100vw;
-  height: 100vh;
+<style scoped>
+/* 容器 */
+.app-container {
+  min-height: 100vh;
+  background-color: #050505;
+  color: white;
+  font-family: 'Noto Sans SC', sans-serif;
   overflow: hidden;
   position: relative;
-  display: flex;
-  flex-direction: column;
 }
-#pixi-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+
+/* 背景特效 */
+.cross-grid-background {
+  position: fixed;
+  inset: 0;
   z-index: 0;
+  pointer-events: none;
+  opacity: 0.2;
+  background-color: #000;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 160px 160px, 160px 160px, 160px 160px, 160px 160px;
+  background-position: center center;
 }
-/* Loader */
-/* Loader - 修复重影问题：改为全屏黑色遮罩 */
-.loader-container {
-  position: fixed;
-  /* 1. 改为 fixed，确保锁死在屏幕上 */
-  top: 0;
-  left: 0;
-  width: 100vw;
-  /* 2. 宽度铺满 */
-  height: 100vh;
-  /* 3. 高度铺满 */
-  background-color: var(--color-bg);
-  /* 4. 关键：加上黑色背景色，挡住下面内容 */
-  /* 布局保持居中 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  /* 5. 确保层级最高 */
-  text-align: center;
-  /* ⚠️ 注意：删掉了原本的 transform: translate(-50%, -50%)，因为全屏布局不需要这个偏移了 */
-}
-/* 中文文本：去掉竖排属性，增加字间距以保持科技感 */
-.loader-text-zh {
-  /* writing-mode: vertical-rl;  <-- 删除或注释掉这一行 */
-  writing-mode: horizontal-tb;
-  /* 强制设为横向 */
-  font-size: 24px;
-  /* 根据需要调整大小 */
-  font-weight: bold;
-  letter-spacing: 0.5em;
-  /* 增加字间距，横向排版时这样更有设计感 */
-  margin-bottom: 10px;
-  /* 中文和英文之间的间距 */
-  color: #fff;
-  /* 确保颜色正确 */
-  text-shadow: 0 0 10px rgba(97, 177, 214, 0.5);
-  /* 保持发光效果 */
-}
-/* 英文文本：通常不需要大改，保持字间距即可 */
-.loader-text-en {
-  font-size: 12px;
-  letter-spacing: 0.3em;
-  color: rgba(255, 255, 255, 0.6);
-  /* 假设你用了等宽字体 */
-}
-/* 侧边栏 */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: var(--sidebar-width);
-  background: rgba(10, 10, 10, 0.75);
-  backdrop-filter: blur(20px);
-  border-right: 1px solid var(--border-tech);
-  z-index: 90;
-  transform: translateX(-100%);
-  transition: transform 0.4s cubic-bezier(0.42, 0, 0.58, 1);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-left: 60px;
-}
-.sidebar.open {
-  transform: translateX(0);
-}
-.sidebar-line {
-  position: absolute;
-  left: 40px;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--border-tech);
-}
-.sidebar-item {
-  font-size: 1.3rem;
-  margin-bottom: 3rem;
-  cursor: pointer;
-  color: #888;
-  transition: all 0.3s;
-  position: relative;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-}
-.sidebar-item:hover {
-  color: #fff;
-  padding-left: 5px;
-}
-.sidebar-item::before {
+
+.cross-grid-background::after {
   content: '';
   position: absolute;
-  left: -15px;
-  width: 2px;
-  height: 0%;
-  background: var(--color-accent);
-  transition: all 0.3s;
+  inset: 0;
+  opacity: 0.15;
+  background-image: radial-gradient(circle, #fff 1px, transparent 0);
+  background-size: 40px 40px;
 }
-.sidebar-item:hover::before {
-  height: 100%;
-}
-.sidebar-item.router-link-active {
-  color: #fff;
-  padding-left: 5px;
-}
-.sidebar-item.router-link-active::before {
-  height: 100%;
-  background: var(--color-accent);
-}
-.sidebar-sub {
-  font-size: 0.9rem;
-  margin-left: 10px;
-  opacity: 0.3;
-}
-/* 菜单触发器 - SVG图标版本 */
-.menu-trigger {
+
+.scan-effect {
   position: fixed;
-  top: 40px;
-  left: 40px;
-  z-index: 100;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  opacity: 0.85;
-}
-
-.esc-hint {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  color: rgba(255, 255, 255, 0.4);
-  transition: all 0.3s ease;
-  margin-bottom: -4px;
-}
-
-.menu-trigger:hover {
-  opacity: 1;
-  transform: translateY(-2px);
-}
-
-.menu-icon {
-  display: block;
-  transition: all 0.3s ease;
-}
-
-/* SVG 元素动画 */
-.menu-frame {
-  transition: all 0.3s ease;
-}
-
-.menu-trigger:hover .menu-frame {
-  stroke: rgba(244, 208, 63, 0.9);
-  fill: rgba(10, 10, 10, 0.95);
-  filter: drop-shadow(0 0 8px rgba(244, 208, 63, 0.4));
-}
-
-.menu-lines line {
-  transition: all 0.3s ease;
-}
-
-.menu-trigger:hover .menu-lines line {
-  stroke: #F4D03F;
-}
-
-.menu-trigger:hover .menu-lines line:nth-child(1) {
-  transform: translateX(3px);
-}
-
-.menu-trigger:hover .menu-lines line:nth-child(3) {
-  transform: translateX(-3px);
-}
-
-.scan-line {
-  animation: scan-move 2s linear infinite;
-  opacity: 0;
-}
-
-.menu-trigger:hover .scan-line {
-  opacity: 1;
-}
-
-@keyframes scan-move {
-  0% { transform: translateY(-15px); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: translateY(15px); opacity: 0; }
-}
-
-.menu-label {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  color: rgba(255, 255, 255, 0.6);
-  transition: all 0.3s ease;
-}
-
-.menu-trigger:hover .menu-label {
-  color: #F4D03F;
-  text-shadow: 0 0 8px rgba(244, 208, 63, 0.5);
-}
-
-.menu-trigger:hover .esc-hint {
-  color: rgba(255, 255, 255, 0.8);
-}
-/* 主舞台 */
-#main-stage {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-/* 右侧时间轴 */
-.timeline-bar {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 120px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 20;
-}
-
-/* 导航节点过渡动画 */
-.nav-node-transition-enter-active,
-.nav-node-transition-leave-active {
-  transition: all 0.5s ease;
-  transition-delay: calc(var(--node-index) * 0.05s);
-}
-
-.nav-node-transition-enter-from {
-  opacity: 0;
-  transform: translateX(30px);
-}
-
-.nav-node-transition-leave-to {
-  opacity: 0;
-  transform: translateX(-30px);
-}
-
-.nav-node-transition-move {
-  transition: transform 0.5s ease;
-}
-.timeline-line {
-  width: 1px;
-  height: 70%;
-  background: var(--border-tech);
-  position: absolute;
-  right: 50px;
-}
-.nav-node {
-  position: relative;
-  margin: 1.8rem 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  width: 100%;
-  padding-right: 42px;
-}
-
-.nav-node-svg {
-  position: relative;
-  z-index: 2;
-  transition: transform 0.3s ease;
-}
-
-.nav-polygon {
-  transition: all 0.3s ease;
-}
-
-.nav-polygon-glow {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  transition: all 0.3s ease;
-}
-
-.nav-node:hover .nav-node-svg {
-  transform: rotate(72deg);
-}
-
-.nav-node:hover .nav-polygon {
-  fill: rgba(97, 177, 214, 0.1);
-  stroke: rgba(97, 177, 214, 0.8);
-}
-
-.nav-node:hover .nav-polygon-glow {
-  stroke: rgba(97, 177, 214, 1);
-  stroke-dashoffset: 0;
-  animation: stroke-flow 1.5s linear infinite;
-}
-
-@keyframes stroke-flow {
-  0% {
-    stroke-dashoffset: 100;
-  }
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-
-.nav-node.active {
-  padding-right: 39px;
-}
-
-.nav-node.active .nav-node-svg {
-  transform: scale(1.3);
-}
-
-.nav-node.active .nav-polygon {
-  fill: rgba(97, 177, 214, 0.2);
-  stroke: rgba(97, 177, 214, 1);
-  filter: drop-shadow(0 0 5px rgba(97, 177, 214, 0.6));
-}
-
-.nav-node.active .nav-polygon-glow {
-  stroke: rgba(97, 177, 214, 1);
-  stroke-dashoffset: 0;
-  animation: stroke-flow 2s linear infinite;
-}
-.nav-label {
-  position: absolute;
-  right: 72px;
-  text-align: right;
-  opacity: 0;
-  transform: translateX(20px);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  inset: 0;
   pointer-events: none;
-  white-space: nowrap;
+  z-index: 50;
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04));
+  background-size: 100% 4px, 3px 100%;
+}
+
+/* 顶部导航 */
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 96px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(12px);
+  z-index: 100;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 0 48px;
+  box-sizing: border-box;
 }
-.nav-label .zh {
-  font-size: 1.1rem;
-  color: #fff;
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-size: 16px;
   font-weight: 500;
+  letter-spacing: -0.05em;
+  color: #22d3ee;
 }
-.nav-label .en {
-  font-size: 0.6rem;
-  color: var(--color-accent);
-  letter-spacing: 0.1em;
+
+.brand-sub {
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  opacity: 0.5;
   text-transform: uppercase;
 }
-.nav-node:hover .nav-node-circle {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  box-shadow: 0 0 8px var(--color-accent);
-}
-.nav-node:hover .nav-label {
-  opacity: 1;
-  transform: translateX(0);
-}
-.nav-node.active {
-  padding-right: 44px;
-}
-.nav-node.active .nav-node-circle {
-  width: 12px;
-  height: 12px;
-  background: #000;
-  border: 2px solid var(--color-accent);
-  box-shadow: 0 0 10px rgba(97, 177, 214, 0.4);
-}
-.nav-node.active .nav-label {
-  opacity: 1;
-  transform: translateX(0);
-}
 
-/* 装饰性SVG元素 - 样式已移至 AppDecoration.vue */
+.nav-divider {
+  height: 32px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  display: none;
+}
+@media (min-width: 640px) { .nav-divider { display: block; } }
 
-/* 内容卡片 - 使用切角设计 */
-.content-card {
-  box-sizing: border-box;
-  background: rgba(10, 10, 10, 0.6);
-  backdrop-filter: blur(5px);
-  border: 1px solid var(--border-tech);
-  padding: 3rem;
-  max-width: 600px;
-  width: 100%;
-  position: relative;
-  z-index: 10;
-  transition: border-color 0.3s;
-  overflow: visible;
-  /* 使用 clip-path 实现切角 */
-  clip-path: polygon(
-    20px 0,           /* 左上切角 */
-    calc(100% - 20px) 0,  /* 右上切角 */
-    100% 20px,
-    100% calc(100% - 20px), /* 右下切角 */
-    calc(100% - 20px) 100%,
-    20px 100%,        /* 左下切角 */
-    0 calc(100% - 20px),
-    0 20px
-  );
+.nav-links {
+  display: none;
+  gap: 32px;
 }
-.content-card:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-}
-/* Clipper 容器：动画核心 */
-.clipper-box {
-  overflow: hidden;
-  height: auto;
-  position: relative;
-  will-change: height;
-}
-/* 角落装饰 - 改为45度切角线条 */
-.corner {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border-color: var(--color-accent);
-  border-style: solid;
-  opacity: 0.4;
+@media (min-width: 768px) { .nav-links { display: flex; } }
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-decoration: none;
+  color: #6b7280;
   transition: all 0.3s;
-  border-width: 0;
 }
-.tl {
-  top: 0;
-  left: 0;
-  border-left: 2px solid var(--color-accent);
-  border-top: 2px solid var(--color-accent);
-  clip-path: polygon(0 0, 100% 0, 0 100%);
+
+.nav-item:hover, .nav-item.router-link-active {
+  color: #22d3ee;
 }
-.tr {
-  top: 0;
-  right: 0;
-  border-right: 2px solid var(--color-accent);
-  border-top: 2px solid var(--color-accent);
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
+.nav-item.router-link-active .item-label, .nav-item:hover .item-label {
+  color: #22d3ee;
 }
-.bl {
-  bottom: 0;
-  left: 0;
-  border-left: 2px solid var(--color-accent);
-  border-bottom: 2px solid var(--color-accent);
-  clip-path: polygon(0 0, 0 100%, 100% 100%);
-}
-.br {
-  bottom: 0;
-  right: 0;
-  border-right: 2px solid var(--color-accent);
-  border-bottom: 2px solid var(--color-accent);
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
-}
-.content-card:hover .corner {
-  width: 30px;
-  height: 30px;
-  opacity: 1;
-}
-/* 状态与文本 */
-.status-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-.status-dot {
-  width: 6px;
-  height: 6px;
-  background: #999;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-.status-text {
-  font-size: 0.7rem;
+
+.item-label {
+  font-size: 14px;
+  font-weight: 500;
   letter-spacing: 0.2em;
-  font-weight: bold;
-}
-@keyframes pulse {
-  0% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.3;
-  }
 }
 
-/* 标题边框容器 */
-.title-wrapper {
-  position: relative;
-  display: inline-block;
+.item-sub {
+  font-size: 9px;
+  opacity: 0.6;
+  font-weight: 500;
 }
 
-.title-border {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 400px;
-  height: 120px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.border-path {
-  stroke-dasharray: 1200;
-  stroke-dashoffset: 1200;
-  animation: draw-border 2s ease-out forwards;
-  animation-delay: 0.5s;
-}
-
-.border-glow {
-  stroke-dasharray: 1200;
-  stroke-dashoffset: 1200;
-  animation: draw-border 2s ease-out forwards;
-  animation-delay: 0.5s;
-  filter: blur(3px);
-}
-
-@keyframes draw-border {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-.barcode {
-  animation: barcode-flicker 3s infinite;
-}
-
-@keyframes barcode-flicker {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 0.4; }
-}
-
-.glitch-title {
-  font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif;
-  font-size: 3rem;
-  margin: 0 0 1rem 0;
-  line-height: 0.9;
-  color: #fff;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 1;
-}
-
-.glitch-title::before,
-.glitch-title::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.glitch-title::before {
-  color: #ff00ff;
-  z-index: -1;
-  /* 常驻故障动画（一直播放） */
-  animation: glitch-1 1.2s linear infinite;
-}
-
-.glitch-title::after {
-  color: #00ffff;
-  z-index: -2;
-  /* 常驻故障动画（一直播放） */
-  animation: glitch-2 1.5s linear infinite;
-}
-/* 移除 hover 触发逻辑：故障效果常驻 */
-
-.glitch-accent {
-  color: var(--color-accent);
-  position: relative;
-  display: inline-block;
-}
-
-.glitch-accent::before,
-.glitch-accent::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.glitch-accent::before {
-  color: #ff00ff;
-  z-index: -1;
-  /* 常驻故障动画 */
-  animation: glitch-1 1.2s linear infinite;
-}
-
-.glitch-accent::after {
-  color: #00ffff;
-  z-index: -2;
-  /* 常驻故障动画 */
-  animation: glitch-2 1.5s linear infinite;
-}
-/* 移除 hover 触发逻辑：故障效果常驻 */
-
-@keyframes glitch-1 {
-  0% {
-    opacity: 1;
-    transform: translate(0);
-    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
-  }
-  5% {
-    opacity: 1;
-    transform: translate(-3px, 2px);
-    clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%);
-  }
-  10% {
-    opacity: 1;
-    transform: translate(3px, -2px);
-    clip-path: polygon(0 0, 100% 0, 100% 20%, 0 20%);
-  }
-  15% {
-    opacity: 1;
-    transform: translate(-2px, -3px);
-    clip-path: polygon(0 80%, 100% 80%, 100% 100%, 0 100%);
-  }
-  20% {
-    opacity: 1;
-    transform: translate(2px, 3px);
-    clip-path: polygon(0 40%, 100% 40%, 100% 70%, 0 70%);
-  }
-  25% {
-    opacity: 0;
-    transform: translate(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(0);
-  }
-}
-
-@keyframes glitch-2 {
-  0% {
-    opacity: 1;
-    transform: translate(0);
-    clip-path: polygon(0 0, 100% 0, 100% 30%, 0 30%);
-  }
-  5% {
-    opacity: 1;
-    transform: translate(2px, -3px);
-    clip-path: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
-  }
-  10% {
-    opacity: 1;
-    transform: translate(-3px, 2px);
-    clip-path: polygon(0 10%, 100% 10%, 100% 40%, 0 40%);
-  }
-  15% {
-    opacity: 1;
-    transform: translate(3px, 3px);
-    clip-path: polygon(0 50%, 100% 50%, 100% 90%, 0 90%);
-  }
-  20% {
-    opacity: 1;
-    transform: translate(-2px, -2px);
-    clip-path: polygon(0 0, 100% 0, 100% 25%, 0 25%);
-  }
-  25% {
-    opacity: 0;
-    transform: translate(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(0);
-  }
-}
-/* 底部栏 */
-.bottom-bar {
-  height: 80px;
+.nav-right {
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 10;
-  pointer-events: none;
+  gap: 24px;
 }
 
-/* 自定义光标 - 样式已移至 AppCursor.vue */
+.icon-link {
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.8;
+  transition: color 0.3s;
+}
+.icon-link:hover {
+  color: #22d3ee;
+}
+
+/* 右侧侧边栏 */
+.right-sidebar {
+  position: fixed;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page-number {
+  position: relative;
+  margin-bottom: 24px;
+  text-align: center;
+  width: 64px;  /* Fixed width to prevent collapse */
+  height: 48px; /* Fixed height matching font-size */
+  display: flex;     /* Use flex to center absolute child if needed, though text-align works for inline blocks usually */
+  justify-content: center;
+}
+
+.current-num {
+  font-size: 48px;
+  font-weight: 500; /* Removed bold/900 */
+  line-height: 1;
+  color: #22d3ee;
+  display: block;
+  width: 100%; /* Ensure it takes full width of parent for centering */
+}
+
+.page-label {
+  position: absolute;
+  right: -32px;
+  top: 4px;
+  font-size: 10px;
+  opacity: 0.3;
+  font-family: monospace;
+  font-style: normal; /* Removed italic */
+  white-space: nowrap;
+}
+
+.progress-track {
+  height: 192px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.progress-indicator {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 16px;
+  border: 1px solid #22d3ee;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: top 0.5s ease-in-out;
+}
+
+.indicator-line {
+  width: 1px;
+  height: 8px;
+  background: #22d3ee;
+}
+
+/* 主内容区 */
+.main-content {
+  padding-top: 96px;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Footer */
+.app-footer {
+  position: fixed;
+  bottom: 0px;
+  left: 24px;
+  z-index: 90;
+  font-size: 8px;
+  letter-spacing: 0.4em;
+  opacity: 0.3;
+  text-transform: uppercase;
+  padding-bottom: 16px; 
+}
+
+/* 颜色工具类 */
+.dark-cyan { color: #22d3ee; }
+
+/* 路由转场 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>

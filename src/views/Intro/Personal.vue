@@ -1,149 +1,206 @@
 <template>
-  <div class="personal-container">
-    <!-- 系统信息装饰 -->
-    <div class="system-info">
-      <span class="sys-text">VER. 2.0.45</span>
-      <span class="sys-text">SYS. ONLINE</span>
-      <span class="sys-text">MEM. 45%</span>
+  <section class="identity-container">
+    <!-- Content Layer -->
+    <div class="layer-content">
+      <div class="identity-wrapper">
+        <div class="profile-header">
+          <div class="h-line-anim"></div>
+          <span class="header-tag">Profile Authenticated</span>
+        </div>
+        
+        <h1 class="main-title">I am Relic<br>I am Ark</h1>
+        
+        <div class="detail-grid">
+          <div class="detail-left">
+            <div class="detail-item group">
+              <div class="icon-wrap">[MONITOR]</div>
+              <div>
+                <p class="detail-sub">Status / Objective</p>
+                <p class="detail-main">JUFE Sophomore / Kaggle Masterpiece</p>
+              </div>
+            </div>
+            
+            <div class="detail-item group">
+              <div class="icon-wrap">[MUSIC]</div>
+              <div>
+                <p class="detail-sub">Artist ID</p>
+                <p class="detail-main">Animenz-Style Pianist / JPOP Producer</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-right">
+            <div class="signature-box">
+               <p class="sig-label">SYSTEM_SIGNATURE</p>
+               <p class="sig-val">0000-RELIC-ARK</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    
-    <!-- 主要信息区 -->
-    <div class="info-section">
-      <div class="info-line">
-        <span class="line-number">01 //</span>
-        <span class="label-tag">IDENTITY:</span>
-        <h2 class="info-content" v-scramble>清 棫</h2>
-      </div>
-      
-      <div class="info-line">
-        <span class="line-number">02 //</span>
-        <span class="label-tag highlight">STATUS:</span>
-        <p class="info-content" v-scramble>JUFE 计算机专业大二在读</p>
-      </div>
-      
-      <div class="info-line">
-        <span class="line-number">03 //</span>
-        <span class="label-tag">MISSION:</span>
-        <p class="info-content" v-scramble>Kaggle竞赛准备</p>
-      </div>
-    </div>
-    
-    <!-- 条形码识别模块 -->
-    <DecorationBarcode 
-      color="#F4D03F" 
-      text="ID: 0000-RELIC-ARK" 
-      text-color="rgba(255, 255, 255, 0.4)"
-    />
-  </div>
+  </section>
 </template>
 
 <script setup>
-import DecorationBarcode from '@/components/DecorationBarcode.vue';
 </script>
 
 <style scoped>
-.personal-container {
+.identity-container {
+  min-height: 80vh; 
+  height: 100%;
   position: relative;
-  padding: 1rem 0;
+  overflow: hidden;
 }
 
-.system-info {
-  position: absolute;
-  top: 0;
-  right: 0;
+.layer-content {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+  align-items: center;
+  padding: 0 24px;
+}
+@media (min-width: 1024px) {
+  .layer-content { padding: 0 96px; }
 }
 
-.sys-text {
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  color: rgba(255, 255, 255, 0.25);
-  letter-spacing: 0.1em;
+.identity-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+@media (min-width: 1024px) {
+  .identity-wrapper { width: 66.66%; }
 }
 
-.info-section {
-  margin: 2rem 0;
-}
-
-.info-line {
+.profile-header {
   display: flex;
-  align-items: baseline;
-  margin-bottom: 1.2rem;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.line-number {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  color: rgba(97, 177, 214, 0.5);
-  min-width: 40px;
-  letter-spacing: 0.05em;
+.h-line-anim {
+  height: 2px;
+  width: 48px;
+  background-color: #22d3ee;
 }
 
-.label-tag {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: #999;
-  padding: 2px 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  min-width: 80px;
-  text-align: center;
+.header-tag {
+  font-size: 12px;
+  letter-spacing: 0.5em;
+  color: #22d3ee;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
-.label-tag.highlight {
-  color: #000;
-  background: rgba(244, 208, 63, 0.9);
-  border-color: #F4D03F;
-  box-shadow: 0 0 10px rgba(244, 208, 63, 0.3);
+.main-title {
+  font-size: 72px;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin-bottom: 32px;
+  margin-top: 0;
+  text-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+@media (min-width: 1024px) {
+  .main-title { font-size: 160px; }
 }
 
-.info-content {
-  margin: 0;
-  flex: 1;
-}
-
-h2.info-content {
-  font-size: 1.8rem;
-  color: #fff;
-  font-weight: 600;
-}
-
-p.info-content {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.barcode-section {
-  margin-top: 3rem;
-  padding-top: 1.5rem;
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 40px;
+}
+@media (min-width: 768px) {
+  .detail-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.detail-left {
   display: flex;
   flex-direction: column;
+  gap: 24px;
+}
+
+.detail-item {
+  display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: 16px;
 }
 
-.barcode-group rect {
-  opacity: 0.7;
-  animation: barcode-scan 3s ease-in-out infinite;
+.icon-wrap {
+  color: #22d3ee;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
 }
 
-@keyframes barcode-scan {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+.detail-sub {
+  font-size: 10px;
+  opacity: 0.4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  margin-top: 0;
 }
 
-.barcode-id {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  color: rgba(244, 208, 63, 0.6);
-  letter-spacing: 0.2em;
-  margin-top: 0.3rem;
+.detail-main {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.detail-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.signature-box {
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 2px solid #22d3ee;
+  padding: 24px;
+  width: 100%;
+  backdrop-filter: blur(12px);
+}
+@media (min-width: 768px) {
+  .signature-box { width: 288px; }
+}
+
+.sig-label {
+  font-size: 9px;
+  opacity: 0.4;
+  margin-bottom: 8px;
+  letter-spacing: 0.1em;
+  margin-top: 0;
+}
+
+.sig-val {
+  font-size: 20px;
+  font-family: monospace;
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  color: #22d3ee;
+  margin: 0;
+}
+
+.background-text {
+  position: absolute;
+  bottom: -5%;
+  right: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  user-select: none;
+}
+
+.background-text h2 {
+  font-size: 25vw;
+  font-weight: 500;
+  font-style: normal;
+  line-height: 1;
+  margin: 0;
 }
 </style>

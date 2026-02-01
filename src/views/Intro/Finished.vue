@@ -1,196 +1,336 @@
 <template>
-  <div class="finished-container">
-    <!-- 模块头部 -->
-    <div class="module-header">
-      <span class="module-tag completed">COMPLETED</span>
-      <span class="module-code">ARCHIVE_v1.0</span>
-    </div>
-    
-    <!-- 项目列表 -->
-    <div class="archive-section">
-      <div class="archive-card">
-        <div class="archive-header">
-          <span class="archive-id">ARC-001</span>
-          <span class="archive-status">✓ COMPLETED</span>
+  <section class="archive-container">
+    <div class="layer-content">
+      <div class="archive-wrapper">
+        <!-- Left Panel -->
+        <div class="archive-left">
+          <div class="archive-header">
+            <h4 class="title-cn">档案万象</h4>
+            <p class="title-en">System Intelligence Hub</p>
+            <div class="title-line"></div>
+          </div>
+
+          <div class="archive-tabs">
+            <button 
+              v-for="item in archiveList" 
+              :key="item.id"
+              @click="activeTab = item.id"
+              class="tab-btn"
+              :class="{ active: activeTab === item.id }"
+            >
+              <div class="tab-indicator"></div>
+              <div class="tab-content">
+                <span class="tab-label">{{ item.label }}</span>
+                <span class="tab-cn">{{ item.cn }}</span>
+              </div>
+            </button>
+          </div>
         </div>
-        <div class="archive-content">
-          <span class="link-icon">→</span>
-          <a href="https://github.com/qinghuan-yu/vue-persenol-Intro" target="_blank" rel="noopener noreferrer" v-scramble>
-            This Vue Project
-          </a>
+
+        <!-- Right Panel -->
+        <div class="archive-right">
+          <div class="data-card">
+            <div class="card-main">
+              <div class="data-header">
+                <div class="pulse-dot"></div>
+                <span class="stream-text">Relic Data Stream</span>
+              </div>
+              
+              <div class="content-area">
+                 <transition name="fade" mode="out-in">
+                   <div :key="activeTab" class="tab-pane">
+                     <h5 class="pane-title">{{ currentItem.cn }}</h5>
+                     <ul class="detail-list">
+                       <li v-for="(detail, idx) in currentItem.details" :key="idx" class="detail-item">
+                         {{ detail }}
+                       </li>
+                     </ul>
+                   </div>
+                 </transition>
+              </div>
+            </div>
+            
+            <div class="card-sidebar">
+               <div class="box-icon">[BOX]</div>
+               <div class="sidebar-lines">
+                  <div class="line-lg"></div>
+                  <div class="line-sm"></div>
+               </div>
+               <div class="sidebar-footer">
+                  <p class="sid">0000-RELIC-ARK</p>
+                  <p class="sverified">Verified</p>
+               </div>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <div class="archive-card">
-        <div class="archive-header">
-          <span class="archive-id">ARC-002</span>
-          <span class="archive-status">✓ COMPLETED</span>
-        </div>
-        <div class="archive-content">
-          <span class="link-icon">♪</span>
-          <a href="https://music.163.com/song?id=2758145032&uct2=U2FsdGVkX1+OhAUdieOlKJSEMOkMOSabaOpgnpVUVko=" target="_blank" rel="noopener noreferrer" v-scramble>
-            からっぽの星で
-          </a>
-        </div>
-      </div>
     </div>
-    
-    <!-- 档案条形码 -->
-    <div class="archive-footer">
-      <DecorationBarcode :width="150" :height="30" color="#4ade80" />
-      <div class="archive-code">ARCHIVE_ID: COMPLETE-02</div>
-    </div>
-  </div>
+  </section>
 </template>
 
 <script setup>
-import DecorationBarcode from '@/components/DecorationBarcode.vue';
+import { ref, computed } from 'vue';
+
+const activeTab = ref('basic');
+
+const archiveList = [
+  { id: 'basic', label: 'BASIC ABILITIES', cn: '基础能力', details: ['计算机基础知识', '动手能力', '解决问题能力'] },
+  { id: 'dev', label: 'DEV INTERESTS', cn: '开发兴趣', details: ['Vue.js 生态', 'C/C++ 嵌入式', 'IoT 探索'] },
+  { id: 'music', label: 'MUSIC PRODUCTION', cn: '音乐制作', details: ['JPOP 编曲', 'EDM (Complextro)', '即兴演奏'] },
+  { id: 'logs', label: 'SYSTEM LOGS', cn: '系统日志', details: ['0000-RELIC-ARK', 'Data Syncing...', 'Status: Authorized'] },
+];
+
+const currentItem = computed(() => archiveList.find(i => i.id === activeTab.value));
 </script>
 
 <style scoped>
-.finished-container {
+.archive-container {
+  min-height: 80vh;
+  height: 100%;
   position: relative;
-  padding: 1rem 0;
+  overflow: hidden;
 }
 
-.module-header {
+.layer-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(74, 222, 128, 0.3);
+  padding: 24px;
+}
+@media (min-width: 1024px) {
+  .layer-content { padding: 96px; }
 }
 
-.module-tag {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  padding: 3px 8px;
-  border: 1px solid;
-}
-
-.module-tag.completed {
-  color: #4ade80;
-  background: rgba(74, 222, 128, 0.1);
-  border-color: #4ade80;
-}
-
-.module-code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.3);
-  letter-spacing: 0.1em;
-}
-
-.archive-section {
+.archive-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  width: 100%;
+  gap: 48px;
+}
+@media (min-width: 1024px) {
+  .archive-wrapper { flex-direction: row; align-items: center; }
 }
 
-.archive-card {
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(74, 222, 128, 0.2);
-  border-left: 3px solid #4ade80;
-  transition: all 0.3s ease;
+.archive-left {
+  width: 100%;
 }
+@media (min-width: 1024px) { .archive-left { width: 33.33%; } }
 
-.archive-card:hover {
-  background: rgba(74, 222, 128, 0.05);
-  border-left-width: 5px;
+.archive-right {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  position: relative;
 }
+@media (min-width: 1024px) { .archive-right { width: 66.66%; } }
 
 .archive-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.8rem;
+  margin-bottom: 48px;
 }
 
-.archive-id {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  color: rgba(74, 222, 128, 0.6);
-  letter-spacing: 0.1em;
+.title-cn {
+  font-size: 48px;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin: 0 0 16px 0;
 }
 
-.archive-status {
-  font-size: 0.65rem;
-  color: #4ade80;
-  font-family: 'JetBrains Mono', monospace;
+.title-en {
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  color: #22d3ee;
+  opacity: 0.6;
+  text-transform: uppercase;
+  margin: 0 0 16px 0;
 }
 
-.archive-content {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 0.8rem;
+.title-line {
+  width: 96px;
+  height: 4px;
+  background: #22d3ee;
 }
 
-.link-icon {
-  font-size: 1.2rem;
-  color: #F4D03F;
-}
-
-a {
-  color: #61b1d6;
-  text-decoration: none;
-  font-size: 1.05rem;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-a::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: #61b1d6;
-  transition: width 0.3s ease;
-}
-
-a:hover {
-  color: #F4D03F;
-}
-
-a:hover::after {
-  width: 100%;
-  background: #F4D03F;
-}
-
-.archive-meta {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.meta-chip {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.5);
-  padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.archive-footer {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+.archive-tabs {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
-.archive-code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  color: rgba(74, 222, 128, 0.5);
-  letter-spacing: 0.2em;
+.tab-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.tab-btn:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.tab-btn.active {
+  background: #06b6d4; /* cyan-500 */
+  border-color: #06b6d4;
+  color: black;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+}
+
+.tab-indicator {
+  width: 4px;
+  height: 12px;
+  background: #22d3ee;
+  margin-right: 16px;
+  transition: background 0.3s;
+}
+.tab-btn.active .tab-indicator {
+  background: black;
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.tab-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tab-cn {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: 0.4;
+}
+.tab-btn.active .tab-cn { opacity: 0.8; }
+
+/* Right Card */
+.data-card {
+  width: 100%;
+  max-width: 768px;
+  aspect-ratio: 16/9;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  padding: 32px;
+  display: flex;
+  gap: 32px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+@media (max-width: 768px) {
+  .data-card { flex-direction: column; aspect-ratio: auto; }
+}
+
+.card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.data-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #22d3ee;
+  animation: pulse 2s infinite;
+}
+
+.stream-text {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.content-area {
+  flex: 1;
+}
+
+.pane-title {
+  font-size: 24px;
+  font-weight: 500;
+  font-style: normal;
+  border-left: 4px solid #22d3ee;
+  padding-left: 16px;
+  margin: 0 0 16px 0;
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.detail-item {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-right: 1px solid rgba(34, 211, 238, 0.2);
+}
+
+/* Sidebar in Card */
+.card-sidebar {
+  width: 192px;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  padding-left: 32px;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+@media (max-width: 768px) {
+  .card-sidebar { width: 100%; border-left: none; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-left: 0; padding-top: 24px; flex-direction: row; }
+}
+
+.box-icon {
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.1);
+  font-weight: 100;
+}
+
+.sidebar-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.line-lg { height: 4px; width: 100%; background: rgba(34, 211, 238, 0.2); }
+.line-sm { height: 4px; width: 66%; background: rgba(34, 211, 238, 0.2); }
+
+.sidebar-footer {
+  text-align: right;
+}
+
+.sid { font-size: 8px; opacity: 0.2; font-family: monospace; margin: 0; }
+.sverified { font-size: 10px; font-weight: 500; color: rgba(34, 211, 238, 0.6); text-transform: uppercase; margin: 0; }
+
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>

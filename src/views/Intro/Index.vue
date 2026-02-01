@@ -1,12 +1,8 @@
 <template>
-  <div>
-    <h2>INFO</h2>
-    <router-view />
+  <div style="width: 100%; height: 100%;">
+    <router-view></router-view>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'IntroIndex'
-};
+<script setup>
 </script>
