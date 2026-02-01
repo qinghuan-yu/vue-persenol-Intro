@@ -35,25 +35,7 @@
       <span class="menu-label">MENU</span>
     </div>
     
-    <!-- 装饰性SVG元素 -->
-    <svg class="decoration-svg" xmlns="http://www.w3.org/2000/svg">
-      <!-- 左上角十字瞄准线 -->
-      <g class="crosshair" transform="translate(100, 100)">
-        <line x1="-20" y1="0" x2="20" y2="0" stroke="rgba(97, 177, 214, 0.3)" stroke-width="1"/>
-        <line x1="0" y1="-20" x2="0" y2="20" stroke="rgba(97, 177, 214, 0.3)" stroke-width="1"/>
-        <circle cx="0" cy="0" r="15" fill="none" stroke="rgba(97, 177, 214, 0.3)" stroke-width="1"/>
-      </g>
-      
-      <!-- 右下角动态三角形 -->
-      <g class="triangle-deco" transform="translate(-100, -100)">
-        <polygon points="0,0 30,0 15,25" fill="none" stroke="rgba(97, 177, 214, 0.4)" stroke-width="1" class="triangle-1"/>
-        <polygon points="0,0 30,0 15,25" fill="none" stroke="rgba(97, 177, 214, 0.2)" stroke-width="1" class="triangle-2" transform="scale(1.3)"/>
-      </g>
-      
-      <!-- 装饰性连接线（从中心到边缘） -->
-      <line class="connect-line" x1="50%" y1="50%" x2="95%" y2="20%" stroke="rgba(97, 177, 214, 0.15)" stroke-width="1" stroke-dasharray="5,5"/>
-      <circle class="pulse-dot" cx="95%" cy="20%" r="3" fill="rgba(97, 177, 214, 0.6)"/>
-    </svg>
+    <AppDecoration />
     
     <section id="main-stage" @click="handleStageClick">
       <div v-if="isIntroPlaying" ref="loaderTextRef" class="loader-container">
@@ -138,20 +120,20 @@
     </section>
     <div class="bottom-bar"></div>
     
-    <!-- 自定义光标 - 使用外部SVG文件 -->
-    <div class="custom-cursor" ref="cursorRef">
-      <img :src="cursorSvg" alt="cursor" />
-    </div>
+    <AppCursor />
   </div>
 </template>
 <script setup>
+import AppDecoration from './components/AppDecoration.vue';
+import AppCursor from './components/AppCursor.vue';
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import gsap from 'gsap';
 import { usePixiApp } from '../composables/usePixiApp.js';
 import qqQrCode from '@/assets/QQ.png';
 import wechatQrCode from '@/assets/WeChat.png';
-import cursorSvg from '@/assets/cursor.svg';
+// import cursorSvg from '@/assets/cursor.svg'; // 已在 AppCursor 组件中引用，此处不再需要
+
 const router = useRouter();
 const route = useRoute();
 const { init, destroy } = usePixiApp();
@@ -166,7 +148,8 @@ const cardHeaderRef = ref(null);
 const clipperRef = ref(null);
 const innerWrapperRef = ref(null);
 const loaderTextRef = ref(null);
-const cursorRef = ref(null);
+// const cursorRef = ref(null); // 移至 AppCursor
+
 // State
 const isIntroPlaying = ref(true);
 const isSidebarOpen = ref(false);
@@ -176,9 +159,8 @@ let isThrottled = false; // 用于滚轮节流
 const mouseX = ref(0);
 const mouseY = ref(0);
 
-// 自定义光标位置
-const cursorX = ref(0);
-const cursorY = ref(0);
+// const cursorX = ref(0); // 移至 AppCursor
+// const cursorY = ref(0); // 移至 AppCursor
 // --- 动画逻辑 ---
 // 1. 离开动画
 const onLeave = (el, done) => {
@@ -263,7 +245,7 @@ onMounted(async () => {
     .to([sidebarRef.value, menuTriggerRef.value, timelineBarRef.value, cardHeaderRef.value], { autoAlpha: 1, duration: 0.5, stagger: 0.1 });
   window.addEventListener('resize', handleResize);
   window.addEventListener('mousemove', handleMouseMove);
-  window.addEventListener('mousemove', updateCursorPosition);
+  // window.addEventListener('mousemove', updateCursorPosition); // 移至 AppCursor
   window.addEventListener('keydown', handleKeyDown);
 });
 watch(route, (newRoute, oldRoute) => {
@@ -312,7 +294,7 @@ onUnmounted(() => {
   destroy();
   window.removeEventListener('resize', handleResize);
   window.removeEventListener('mousemove', handleMouseMove);
-  window.removeEventListener('mousemove', updateCursorPosition);
+  // window.removeEventListener('mousemove', updateCursorPosition); // 移至 AppCursor
   window.removeEventListener('keydown', handleKeyDown);
 });
 const handleResize = () => {
@@ -321,16 +303,7 @@ const handleResize = () => {
   }
 }
 
-// 更新自定义光标位置 - 使用纯CSS transform，无GSAP依赖
-const updateCursorPosition = (e) => {
-  cursorX.value = e.clientX;
-  cursorY.value = e.clientY;
-  
-  if (cursorRef.value) {
-    // 使用 CSS transform + will-change 实现硬件加速
-    cursorRef.value.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
-  }
-};
+// updateCursorPosition 移至 AppCursor
 
 // 处理键盘事件（ESC键触发菜单）
 const handleKeyDown = (e) => {
@@ -831,79 +804,8 @@ body {
   transform: translateX(0);
 }
 
-/* 装饰性SVG元素 */
-.decoration-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 5;
-  overflow: visible;
-}
+/* 装饰性SVG元素 - 样式已移至 AppDecoration.vue */
 
-.crosshair {
-  animation: rotate-crosshair 10s linear infinite;
-}
-
-@keyframes rotate-crosshair {
-  0% { transform: translate(100px, 100px) rotate(0deg); }
-  100% { transform: translate(100px, 100px) rotate(360deg); }
-}
-
-.triangle-deco {
-  position: absolute;
-  right: 100px;
-  bottom: 100px;
-}
-
-.triangle-1 {
-  animation: triangle-pulse 2s ease-in-out infinite;
-}
-
-.triangle-2 {
-  animation: triangle-pulse 2s ease-in-out infinite 1s;
-}
-
-@keyframes triangle-pulse {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.1);
-  }
-}
-
-.connect-line {
-  animation: dash-flow 3s linear infinite;
-}
-
-@keyframes dash-flow {
-  0% {
-    stroke-dashoffset: 0;
-  }
-  100% {
-    stroke-dashoffset: -20;
-  }
-}
-
-.pulse-dot {
-  animation: dot-pulse 2s ease-in-out infinite;
-}
-
-@keyframes dot-pulse {
-  0%, 100% {
-    r: 3;
-    opacity: 0.6;
-  }
-  50% {
-    r: 5;
-    opacity: 1;
-  }
-}
 /* 内容卡片 - 使用切角设计 */
 .content-card {
   box-sizing: border-box;
@@ -1215,29 +1117,5 @@ body {
   pointer-events: none;
 }
 
-/* 自定义光标 */
-.custom-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 32px;
-  height: 32px;
-  pointer-events: none;
-  z-index: 99999;
-  /* 使用 will-change 优化性能，启用GPU硬件加速 */
-  will-change: transform;
-  filter: drop-shadow(0 0 3px rgba(97, 177, 214, 0.3));
-}
-
-.custom-cursor img {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* 隐藏光标时（如在加载页面） */
-.custom-cursor.hidden {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
+/* 自定义光标 - 样式已移至 AppCursor.vue */
 </style>

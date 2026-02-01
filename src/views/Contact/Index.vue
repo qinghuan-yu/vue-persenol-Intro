@@ -32,21 +32,14 @@
     
     <!-- 装饰性条形码 -->
     <div class="terminal-footer">
-      <svg width="200" height="35" xmlns="http://www.w3.org/2000/svg">
-        <g class="barcode-group">
-          <rect x="0" y="0" width="4" height="25" fill="#61b1d6"/>
-          <rect x="6" y="0" width="2" height="25" fill="#61b1d6"/>
-          <rect x="10" y="0" width="5" height="25" fill="#61b1d6"/>
-          <rect x="17" y="0" width="2" height="25" fill="#61b1d6"/>
-          <rect x="21" y="0" width="4" height="25" fill="#61b1d6"/>
-          <rect x="27" y="0" width="2" height="25" fill="#61b1d6"/>
-          <rect x="31" y="0" width="3" height="25" fill="#61b1d6"/>
-          <rect x="36" y="0" width="2" height="25" fill="#61b1d6"/>
-          <rect x="40" y="0" width="5" height="25" fill="#61b1d6"/>
-          <rect x="47" y="0" width="2" height="25" fill="#61b1d6"/>
-        </g>
-      </svg>
-      <div class="terminal-code">TERMINAL_ID: 0xFF-CONTACT-8A2B</div>
+      <DecorationBarcode
+        color="#61b1d6"
+        :width="200"
+        :height="35"
+        :bar-height="25"
+        text="TERMINAL_ID: 0xFF-CONTACT-8A2B"
+        text-color="#61b1d6"
+      />
     </div>
     
     <!-- 真实二维码叠加层（鼠标悬停显示） -->
@@ -74,6 +67,8 @@
 </template>
 
 <script setup>
+import DecorationBarcode from '@/components/DecorationBarcode.vue';
+
 // Contact 页面主要通过背景粒子系统展示二维码
 // 此处保留基础文字内容以触发页面过渡动画
 </script>

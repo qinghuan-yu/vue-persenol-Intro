@@ -29,37 +29,16 @@
     </div>
     
     <!-- 条形码识别模块 -->
-    <div class="barcode-section">
-      <svg width="180" height="40" xmlns="http://www.w3.org/2000/svg">
-        <g class="barcode-group">
-          <rect x="0" y="0" width="3" height="30" fill="#F4D03F"/>
-          <rect x="5" y="0" width="2" height="30" fill="#F4D03F"/>
-          <rect x="9" y="0" width="4" height="30" fill="#F4D03F"/>
-          <rect x="15" y="0" width="2" height="30" fill="#F4D03F"/>
-          <rect x="19" y="0" width="3" height="30" fill="#F4D03F"/>
-          <rect x="24" y="0" width="1" height="30" fill="#F4D03F"/>
-          <rect x="27" y="0" width="4" height="30" fill="#F4D03F"/>
-          <rect x="33" y="0" width="2" height="30" fill="#F4D03F"/>
-          <rect x="37" y="0" width="3" height="30" fill="#F4D03F"/>
-          <rect x="42" y="0" width="1" height="30" fill="#F4D03F"/>
-          <rect x="45" y="0" width="2" height="30" fill="#F4D03F"/>
-          <rect x="49" y="0" width="4" height="30" fill="#F4D03F"/>
-          <rect x="55" y="0" width="2" height="30" fill="#F4D03F"/>
-          <rect x="59" y="0" width="3" height="30" fill="#F4D03F"/>
-          <rect x="64" y="0" width="1" height="30" fill="#F4D03F"/>
-          <rect x="67" y="0" width="4" height="30" fill="#F4D03F"/>
-          <rect x="73" y="0" width="2" height="30" fill="#F4D03F"/>
-        </g>
-      </svg>
-      <div class="barcode-id">ID: 0000-RELIC-ARK</div>
-    </div>
+    <DecorationBarcode 
+      color="#F4D03F" 
+      text="ID: 0000-RELIC-ARK" 
+      text-color="rgba(255, 255, 255, 0.4)"
+    />
   </div>
 </template>
 
-<script>
-export default {
-  name: 'PersonalInfo'
-}
+<script setup>
+import DecorationBarcode from '@/components/DecorationBarcode.vue';
 </script>
 
 <style scoped>

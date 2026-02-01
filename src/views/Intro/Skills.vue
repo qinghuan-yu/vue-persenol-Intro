@@ -43,10 +43,8 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'SkillsList'
-}
+<script setup>
+// 使用 script setup
 </script>
 
 <style scoped>

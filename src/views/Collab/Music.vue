@@ -8,48 +8,18 @@
     
     <!-- 合作领域 -->
     <div class="collab-section">
-      <div class="collab-card">
+      <div v-for="(item, index) in musicItems" :key="index" class="collab-card">
         <div class="card-header">
-          <span class="collab-id">MUS-01</span>
-          <span class="genre-tag jpop">JPOP</span>
+          <span class="collab-id">{{ item.id }}</span>
+          <span :class="['genre-tag', item.genreClass]">{{ item.genre }}</span>
         </div>
         <div class="card-body">
-          <span class="music-icon">♫</span>
-          <p class="collab-desc" v-scramble>Jpop制作</p>
+          <span class="music-icon">{{ item.icon }}</span>
+          <p class="collab-desc" v-scramble>{{ item.desc }}</p>
         </div>
         <div class="card-footer">
           <div class="waveform">
-            <span class="wave-bar" style="height: 60%"></span>
-            <span class="wave-bar" style="height: 80%"></span>
-            <span class="wave-bar" style="height: 40%"></span>
-            <span class="wave-bar" style="height: 90%"></span>
-            <span class="wave-bar" style="height: 70%"></span>
-            <span class="wave-bar" style="height: 50%"></span>
-            <span class="wave-bar" style="height: 85%"></span>
-            <span class="wave-bar" style="height: 65%"></span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="collab-card">
-        <div class="card-header">
-          <span class="collab-id">MUS-02</span>
-          <span class="genre-tag edm">EDM</span>
-        </div>
-        <div class="card-body">
-          <span class="music-icon">♬</span>
-          <p class="collab-desc" v-scramble>尝试complextro</p>
-        </div>
-        <div class="card-footer">
-          <div class="waveform">
-            <span class="wave-bar" style="height: 90%"></span>
-            <span class="wave-bar" style="height: 70%"></span>
-            <span class="wave-bar" style="height: 95%"></span>
-            <span class="wave-bar" style="height: 60%"></span>
-            <span class="wave-bar" style="height: 85%"></span>
-            <span class="wave-bar" style="height: 75%"></span>
-            <span class="wave-bar" style="height: 80%"></span>
-            <span class="wave-bar" style="height: 90%"></span>
+            <span v-for="(h, i) in item.waves" :key="i" class="wave-bar" :style="{ height: h }"></span>
           </div>
         </div>
       </div>
@@ -65,10 +35,25 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'MusicCollab'
-}
+<script setup>
+const musicItems = [
+  { 
+    id: 'MUS-01', 
+    genre: 'JPOP', 
+    genreClass: 'jpop',
+    icon: '♫', 
+    desc: 'Jpop制作', 
+    waves: ['60%', '80%', '40%', '90%', '70%', '50%', '85%', '65%'] 
+  },
+  { 
+    id: 'MUS-02', 
+    genre: 'EDM', 
+    genreClass: 'edm',
+    icon: '♬', 
+    desc: '尝试complextro', 
+    waves: ['90%', '70%', '95%', '60%', '85%', '75%', '80%', '90%'] 
+  }
+];
 </script>
 
 <style scoped>
