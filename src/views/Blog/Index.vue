@@ -70,8 +70,8 @@ onMounted(() => {
   
   for (const path in modules) {
     const content = modules[path];
-    const titleMatch = content.match(/title:\s*"(.*?)"/);
-    const dateMatch = content.match(/date:\s*"(.*?)"/);
+    const titleMatch = content.match(/title:\s*["']?([^"'\n\r]+)["']?/);
+    const dateMatch = content.match(/date:\s*["']?([^"'\n\r]+)["']?/);
     // Simple logic to extract date parts for display "YYYY // MM / DD"
     const rawDate = dateMatch ? dateMatch[1] : '2026-01-01';
     const displayDate = rawDate.replace(/-/g, ' / ').replace(/^(\d{4}) \/ /, '$1 // ');

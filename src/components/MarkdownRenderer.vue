@@ -5,10 +5,8 @@
 <script setup>
 import { ref, watchEffect } from 'vue';
 import MarkdownIt from 'markdown-it';
-import matter from 'gray-matter';
-import { getHighlighter } from 'shiki';
-// Temporarily using a simple css fallback if github-markdown-css isn't installed
-// import 'github-markdown-css/github-markdown-dark.css'; 
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github-dark.css'; 
 
 const props = defineProps({
   source: String // 传入的 md 原始内容
@@ -20,40 +18,46 @@ const metadata = ref({});
 const init = async () => {
     if (!props.source) return;
 
-    // 1. 解析 Frontmatter (头部元数据) (Simple shim if matter not installed, but trying standard way)
-    // Note: If gray-matter fails in browser without node polyfills, this might need vite config adj.
-    // For now assuming Vite handles it or we process raw string simply.
     let content = props.source;
-    
-    try {
-      const parsed = matter(props.source);
-      content = parsed.content;
-      metadata.value = parsed.data;
-      emit('metadata', parsed.data);
-    } catch (e) {
-      console.warn("Markdown parsing basic mode:", e);
-    }
+    let metadataObj = {};
 
-    // 2. 初始化 Shiki 高亮 (Lazy load)
-    let highlighter;
-    try {
-        highlighter = await getHighlighter({
-            themes: ['github-dark'],
-            langs: ['javascript', 'vue', 'css', 'html', 'python', 'bash']
+    // 1. Simple Regex Frontmatter Parser
+    const fmRegex = /^---\r?\n([\s\S]+?)\r?\n---/;
+    const match = props.source.match(fmRegex);
+
+    if (match) {
+        const rawFm = match[1];
+        content = props.source.replace(fmRegex, '').trim();
+        
+        rawFm.split('\n').forEach(line => {
+            const parts = line.split(':');
+            if (parts.length >= 2) {
+                const key = parts[0].trim();
+                let value = parts.slice(1).join(':').trim();
+                if (value.startsWith('"') && value.endsWith('"')) {
+                    value = value.slice(1, -1);
+                }
+                metadataObj[key] = value;
+            }
         });
-    } catch (e) {
-        console.warn("Shiki loading failed, falling back to plain code", e);
+        emit('metadata', metadataObj);
+        metadata.value = metadataObj;
     }
 
-    // 3. 配置 Markdown-it
+    // 2. Configure Markdown-it with Highlight.js
     const md = new MarkdownIt({
         html: true,
         linkify: true,
-        highlight: (code, lang) => {
-            if (highlighter) {
-                return highlighter.codeToHtml(code, { lang, theme: 'github-dark' });
+        typographer: true,
+        highlight: function (str, lang) {
+            if (lang && hljs.getLanguage(lang)) {
+                try {
+                    return '<pre class="hljs"><code>' +
+                        hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+                        '</code></pre>';
+                } catch (__) {}
             }
-            return `<pre class="hljs"><code>${code}</code></pre>`;
+            return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
         }
     });
 
@@ -98,8 +102,8 @@ watchEffect(() => {
   text-decoration: underline;
 }
 
-/* Shiki Code Block Styles */
-.markdown-body pre.shiki {
+/* Highlight.js Code Block Styles */
+.markdown-body pre.hljs {
   background-color: #0d1117 !important; /* GitHub Dark BG */
   padding: 1rem;
   border-radius: 6px;
