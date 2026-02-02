@@ -5,8 +5,8 @@
         <!-- Left Panel -->
         <div class="archive-left">
           <div class="archive-header">
-            <h4 class="title-cn">档案万象</h4>
-            <p class="title-en">System Intelligence Hub</p>
+            <h4 class="title-cn">博客文章</h4>
+            <p class="title-en">My Blog</p>
             <div class="title-line"></div>
           </div>
 
@@ -40,11 +40,21 @@
                  <transition name="fade" mode="out-in">
                    <div :key="activeTab" class="tab-pane">
                      <h5 class="pane-title">{{ currentItem.cn }}</h5>
-                     <ul class="detail-list">
-                       <li v-for="(detail, idx) in currentItem.details" :key="idx" class="detail-item">
+                   <transition-group 
+                      tag="ul" 
+                      name="staggered-list" 
+                      class="detail-list"
+                      appear
+                   >
+                       <li 
+                         v-for="(detail, idx) in currentItem.details" 
+                         :key="detail" 
+                         class="detail-item"
+                         :style="{ '--i': idx }"
+                       >
                          {{ detail }}
                        </li>
-                     </ul>
+                   </transition-group>
                    </div>
                  </transition>
               </div>
@@ -57,7 +67,7 @@
                   <div class="line-sm"></div>
                </div>
                <div class="sidebar-footer">
-                  <p class="sid">0000-RELIC-ARK</p>
+                  <p class="sid"></p>
                   <p class="sverified">Verified</p>
                </div>
             </div>
@@ -71,13 +81,12 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-const activeTab = ref('basic');
+const activeTab = ref('tech');
 
 const archiveList = [
-  { id: 'basic', label: 'BASIC ABILITIES', cn: '基础能力', details: ['计算机基础知识', '动手能力', '解决问题能力'] },
-  { id: 'dev', label: 'DEV INTERESTS', cn: '开发兴趣', details: ['Vue.js 生态', 'C/C++ 嵌入式', 'IoT 探索'] },
-  { id: 'music', label: 'MUSIC PRODUCTION', cn: '音乐制作', details: ['JPOP 编曲', 'EDM (Complextro)', '即兴演奏'] },
-  { id: 'logs', label: 'SYSTEM LOGS', cn: '系统日志', details: ['0000-RELIC-ARK', 'Data Syncing...', 'Status: Authorized'] },
+  { id: 'tech', label: 'TECH NOTE', cn: '技术笔记', details: ['Vue3 Composition API Best Practices', 'WebGL & Three.js Integration', 'System Refactoring Log 2026'] },
+  { id: 'life', label: 'DAILY LIFE', cn: '生活随笔', details: ['Musings on Digital Art', 'Coffee Brewing 101', 'Midnight Coding Session'] },
+  { id: 'music', label: 'MUSIC PROD', cn: '音乐创作', details: ['Logic Pro X Workflow', 'Sound Design: Granular Synthesis', 'New Track: Neon Horizon'] },
 ];
 
 const currentItem = computed(() => archiveList.find(i => i.id === activeTab.value));
@@ -332,5 +341,18 @@ const currentItem = computed(() => archiveList.find(i => i.id === activeTab.valu
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+/* Staggered List Animation */
+.staggered-list-enter-active,
+.staggered-list-leave-active {
+  transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--i) * 0.1s);
+}
+
+.staggered-list-enter-from,
+.staggered-list-leave-to {
+  opacity: 0;
+  transform: translateX(-50px);
 }
 </style>

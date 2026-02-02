@@ -13,28 +13,27 @@
         </div>
         <div class="nav-divider"></div>
         <div class="nav-links">
-          <router-link to="/intro/personal" class="nav-item">
+          <router-link to="/identity" class="nav-item">
             <span class="item-label">IDENTITY</span>
-            <span class="item-sub">身份</span>
+            <span class="item-sub">简介</span>
           </router-link>
-          <router-link to="/intro/ongoing" class="nav-item">
+          <router-link to="/projects" class="nav-item">
             <span class="item-label">PROJECTS</span>
             <span class="item-sub">项目</span>
           </router-link>
-          <router-link to="/intro/skills" class="nav-item">
-            <span class="item-label">CAPABILITY</span>
-            <span class="item-sub">能力</span>
+          <router-link to="/blog" class="nav-item">
+            <span class="item-label">BLOG</span>
+            <span class="item-sub">博客</span>
           </router-link>
-          <router-link to="/intro/finished" class="nav-item">
-            <span class="item-label">ARCHIVE</span>
-            <span class="item-sub">档案</span>
+          <router-link to="/contact" class="nav-item">
+             <span class="item-label">CONTACT</span>
+             <span class="item-sub">联系方式</span>
           </router-link>
         </div>
       </div>
 
       <div class="nav-right">
-        <a href="https://github.com/qinghuan-yu" target="_blank" class="icon-link">GITHUB</a>
-        <a href="mailto:Reliarc.me@outlook.com" class="icon-link">MAIL</a>
+        <!-- Links Removed -->
       </div>
     </nav>
 
@@ -67,7 +66,7 @@
     </main>
 
     <footer class="app-footer">
-      © 2026 RELIC-ARK ARCHIVE // JUFE COMPUTER SCIENCE // STATUS: AUTHORIZED
+      © 2026 RELIC-ARK ARCHIVE // Qing-UU
     </footer>
   </div>
 </template>
@@ -79,7 +78,7 @@ import { useRoute, useRouter } from 'vue-router';
 const route = useRoute();
 const router = useRouter();
 
-const routesOrder = ['/intro/personal', '/intro/ongoing', '/intro/skills', '/intro/finished'];
+const routesOrder = ['/identity', '/projects', '/blog', '/contact'];
 
 let isNavigating = false;
 
@@ -120,19 +119,19 @@ onUnmounted(() => {
 
 const currentPageIndex = computed(() => {
   const path = route.path;
-  if (path.includes('personal')) return '01';
-  if (path.includes('ongoing')) return '02';
-  if (path.includes('skills')) return '03';
-  if (path.includes('finished') || path.includes('links')) return '04';
+  if (path.includes('identity')) return '01';
+  if (path.includes('projects')) return '02';
+  if (path.includes('blog')) return '03'; // Blog / Archive
+  if (path.includes('contact')) return '04';  // Contact
   return '00';
 });
 
 const indicatorPosition = computed(() => {
   const path = route.path;
-  if (path.includes('personal')) return '0%';
-  if (path.includes('ongoing')) return '33%';
-  if (path.includes('skills')) return '66%';
-  if (path.includes('finished') || path.includes('links')) return '100%';
+  if (path.includes('identity')) return '0%';
+  if (path.includes('projects')) return '33%';
+  if (path.includes('blog')) return '66%';
+  if (path.includes('contact')) return '100%';
   return '0%';
 });
 </script>
@@ -154,14 +153,14 @@ const indicatorPosition = computed(() => {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.2;
+  opacity: 1; /* Increased opacity to make grid visible */
   background-color: #000;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 160px 160px, 160px 160px, 160px 160px, 160px 160px;
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 100px 100px, 100px 100px; /* Smaller size for denser grid */
   background-position: center center;
 }
 
@@ -216,7 +215,7 @@ const indicatorPosition = computed(() => {
 
 .brand-name {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: -0.05em;
   color: #22d3ee;
 }
@@ -260,7 +259,7 @@ const indicatorPosition = computed(() => {
 
 .item-label {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.2em;
 }
 
@@ -280,7 +279,7 @@ const indicatorPosition = computed(() => {
   color: white;
   text-decoration: none;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
   opacity: 0.8;
   transition: color 0.3s;
 }
@@ -298,6 +297,7 @@ const indicatorPosition = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  pointer-events: none; /* Make click-through */
 }
 
 .page-number {
@@ -312,11 +312,13 @@ const indicatorPosition = computed(() => {
 
 .current-num {
   font-size: 48px;
-  font-weight: 500; /* Removed bold/900 */
+  font-weight: 700;
   line-height: 1;
   color: #22d3ee;
   display: block;
-  width: 100%; /* Ensure it takes full width of parent for centering */
+  width: 100%;
+  /* Horizontal cut at the bottom 25% */
+  clip-path: inset(0 0 25% 0);
 }
 
 .page-label {
@@ -382,7 +384,37 @@ const indicatorPosition = computed(() => {
 /* 颜色工具类 */
 .dark-cyan { color: #22d3ee; }
 
-/* 路由转场 */
+/* Global Background Fix */
+.app-container {
+  background-color: #000000;
+}
+
+/* 路由转场: 垂直向上 (Revert to Vertical Up) */
+/* Enter from Bottom, Leave to Top */
+
+.parallax-enter-active,
+.parallax-leave-active {
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Entering page (from Bottom) */
+.parallax-enter-from {
+  opacity: 0;
+  transform: translateY(60px);
+}
+
+/* Leaving page (to Top) */
+.parallax-leave-to {
+  opacity: 0;
+  transform: translateY(-60px);
+}
+
+.parallax-enter-to,
+.parallax-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.4s ease;

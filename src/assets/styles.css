@@ -114,10 +114,8 @@ canvas {
 .layer-content .archive-header,
 .layer-content .detail-grid,
 .layer-content .project-list,
-.layer-content .skills-list,
 .layer-content .archive-tabs,
 .layer-content .projects-visual-section,
-.layer-content .skills-visual,
 .layer-content .archive-right {
     transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1); 
     backface-visibility: hidden;
@@ -144,10 +142,8 @@ canvas {
 .parallax-leave-to .layer-content .archive-header,
 .parallax-leave-to .layer-content .detail-grid,
 .parallax-leave-to .layer-content .project-list,
-.parallax-leave-to .layer-content .skills-list,
 .parallax-leave-to .layer-content .archive-tabs,
 .parallax-leave-to .layer-content .projects-visual-section,
-.parallax-leave-to .layer-content .skills-visual,
 .parallax-leave-to .layer-content .archive-right {
     opacity: 0;
     transform: translateY(-20px);
@@ -168,10 +164,8 @@ canvas {
 .parallax-enter-from .layer-content .archive-header,
 .parallax-enter-from .layer-content .detail-grid,
 .parallax-enter-from .layer-content .project-list,
-.parallax-enter-from .layer-content .skills-list,
 .parallax-enter-from .layer-content .archive-tabs,
 .parallax-enter-from .layer-content .projects-visual-section,
-.parallax-enter-from .layer-content .skills-visual,
 .parallax-enter-from .layer-content .archive-right {
     opacity: 0;
     transform: translateY(20px);
@@ -203,27 +197,23 @@ canvas {
 /* Group 2: Main Lists & Grids (Delayed) */
 .parallax-enter-active .layer-content .detail-grid,
 .parallax-enter-active .layer-content .project-list,
-.parallax-enter-active .layer-content .skills-list,
 .parallax-enter-active .layer-content .archive-tabs {
     transition-delay: 0.15s;
 }
 
 .parallax-leave-active .layer-content .detail-grid,
 .parallax-leave-active .layer-content .project-list,
-.parallax-leave-active .layer-content .skills-list,
 .parallax-leave-active .layer-content .archive-tabs {
     transition-delay: 0.10s;
 }
 
 /* Group 3: Right Visuals & Details (Most Delayed) */
 .parallax-enter-active .layer-content .projects-visual-section,
-.parallax-enter-active .layer-content .skills-visual,
 .parallax-enter-active .layer-content .archive-right {
     transition-delay: 0.25s;
 }
 
 .parallax-leave-active .layer-content .projects-visual-section,
-.parallax-leave-active .layer-content .skills-visual,
 .parallax-leave-active .layer-content .archive-right {
     transition-delay: 0.20s;
 }

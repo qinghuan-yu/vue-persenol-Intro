@@ -16,14 +16,14 @@
               <div class="icon-wrap">[MONITOR]</div>
               <div>
                 <p class="detail-sub">Status / Objective</p>
-                <p class="detail-main">JUFE Sophomore / Kaggle Masterpiece</p>
+                <p class="detail-main">JUFE Sophomore / Kaggle Prepare</p>
               </div>
             </div>
             
             <div class="detail-item group">
               <div class="icon-wrap">[MUSIC]</div>
               <div>
-                <p class="detail-sub">Artist ID</p>
+                <p class="detail-sub">Artist IN</p>
                 <p class="detail-main">Animenz-Style Pianist / JPOP Producer</p>
               </div>
             </div>
@@ -31,8 +31,8 @@
 
           <div class="detail-right">
             <div class="signature-box">
-               <p class="sig-label">SYSTEM_SIGNATURE</p>
-               <p class="sig-val">0000-RELIC-ARK</p>
+               <p class="sig-label"></p>
+               <p class="sig-val"></p>
             </div>
           </div>
         </div>
