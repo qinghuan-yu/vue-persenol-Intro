@@ -10,8 +10,6 @@ export default defineConfig({
     }
   },
   build: {
-    cssCodeSplit: false,
-    // 优化构建配置
     rollupOptions: {
       output: {
         manualChunks: {
