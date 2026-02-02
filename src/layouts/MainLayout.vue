@@ -3,6 +3,7 @@
     <div ref="pixiContainer" id="pixi-container"></div>
     <div :class="['sidebar', { open: isSidebarOpen }]" ref="sidebarRef" style="opacity: 0; visibility: hidden;">
       <div class="sidebar-line"></div>
+      <a href="https://reliarc.com" target="_blank" class="sidebar-item"><span>首页</span><span class="sidebar-sub">INDEX</span></a>
       <router-link to="/intro" class="sidebar-item" @click="closeSidebar"><span>介绍</span><span class="sidebar-sub">INTRO</span></router-link>
       <router-link to="/collab" class="sidebar-item" @click="closeSidebar"><span>合作</span><span
           class="sidebar-sub">COLLAB</span></router-link>
