@@ -59,11 +59,14 @@ onMounted(() => {
         container.classList.add('animate-entry');
     }, 3500); 
   } else if (container) {
-    // 路由切换回来，立即播放同样的动画
-    // 给极短延迟确保 DOM ready
-    requestAnimationFrame(() => {
+    // 强制先移除（防止缓存导致的类名残留），再延迟添加
+    container.classList.remove('animate-entry'); 
+    
+    // 延迟 100ms 确保每一轮进入都能触发完整的 transition 动画
+    // 这对于保留"进场感"非常重要
+    setTimeout(() => {
          container.classList.add('animate-entry');
-    });
+    }, 100);
   }
   
   // 🔥 在后台预加载所有项目图片
@@ -111,22 +114,22 @@ onMounted(() => {
 
 /* 2. Figure 2 Content - Layered Stagger */
 /* Profile Header (Top of Fig 2) */
-/* Shorter Gap: 1.4s -> 0.8s */
+/* Shorter Gap: 0.8s -> 0.5s */
 .identity-container.animate-entry .profile-header.stagger-item {
-   transition-delay: 0.8s !important; 
+   transition-delay: 0.5s !important; 
 }
 
 /* Left Column Details (Monitor, Music) */
 .identity-container.animate-entry .detail-left .stagger-item:nth-child(1) {
-   transition-delay: 1.0s !important;
+   transition-delay: 0.7s !important;
 }
 .identity-container.animate-entry .detail-left .stagger-item:nth-child(2) {
-   transition-delay: 1.2s !important;
+   transition-delay: 0.9s !important;
 }
 
 /* Right Column (Signature) */
 .identity-container.animate-entry .signature-box.stagger-item {
-   transition-delay: 1.4s !important;
+   transition-delay: 1.1s !important;
 }
 
 /* ... existing styles ... */
