@@ -143,7 +143,7 @@ const currentPostContent = computed(() => {
 .archive-left {
   width: 100%;
 }
-@media (min-width: 1024px) { .archive-left { width: 33.33%; } }
+@media (min-width: 1024px) { .archive-left { width: 28%; } }
 
 .archive-right {
   width: 100%;
@@ -151,7 +151,7 @@ const currentPostContent = computed(() => {
   justify-content: center;
   position: relative;
 }
-@media (min-width: 1024px) { .archive-right { width: 66.66%; } }
+@media (min-width: 1024px) { .archive-right { width: 72%; } }
 
 .archive-header {
   margin-bottom: 48px;
@@ -252,20 +252,27 @@ const currentPostContent = computed(() => {
 }
 
 .item-title-cn {
-  font-size: 24px; /* Increased from 20px */
-  font-weight: 700;
-  color: #fff;
+  font-size: 18px; /* Reduced from 24px for lighter visual weight */
+  font-weight: 500; /* Reduced weight */
+  color: rgba(255, 255, 255, 0.6); /* Slightly increased visibility from 0.4 to 0.6 */
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.4;
+  transition: color 0.3s;
+}
+
+.ak-list-item:hover .item-title-cn,
+.ak-list-item.active .item-title-cn {
+  color: #fff; /* Highlight on hover/active */
+  font-weight: 700;
 }
 
 .item-subtitle-en {
   font-family: 'Courier New', monospace;
-  font-size: 14px; /* Increased from 12px */
+  font-size: 12px; /* Reduced from 14px */
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.4); /* Slightly increased from 0.3 */
   letter-spacing: 0.05em;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .item-separator {

@@ -1,20 +1,26 @@
 <template>
   <div class="renderer-container">
     <!-- Meta Header (Desc & Tags) -->
-    <!-- Animation Order: Body First, then Header. We use classes to control delay. -->
+    <!-- Simplified structure for lighter visual weight -->
     <div v-if="metadata.desc || (metadata.tags && metadata.tags.length)" class="post-meta-header anim-delayed">
-       <div v-if="metadata.desc" class="meta-desc">
-          <span class="prefix">ABSTRACT //</span>
-          <span class="desc-text">{{ metadata.desc }}</span>
+       
+       <!-- Combined info row -->
+       <div class="meta-info-row">
+           <div v-if="metadata.desc" class="meta-desc">
+              <span class="prefix">ABSTRACT //</span>
+              <span class="desc-text">{{ metadata.desc }}</span>
+           </div>
+           
+           <div v-if="metadata.tags && metadata.tags.length" class="meta-tags">
+              <span class="prefix">TAGS //</span>
+              <div class="tags-list">
+                <span v-for="tag in metadata.tags" :key="tag" class="tag-text">
+                    {{ tag }}
+                </span>
+              </div>
+           </div>
        </div>
-       <div v-if="metadata.tags && metadata.tags.length" class="meta-tags">
-          <span class="prefix">TAGS //</span>
-          <div class="tags-list">
-            <span v-for="tag in metadata.tags" :key="tag" class="tag-chip">
-                {{ tag }}
-            </span>
-          </div>
-       </div>
+
        <div class="header-divider">
          <div class="dashed-line"></div>
        </div>
@@ -197,17 +203,23 @@ watchEffect(() => {
 .post-meta-header {
   margin-bottom: 2rem;
   font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem; /* Smaller font */
+  color: rgba(255, 255, 255, 0.5); /* Dimmer */
+}
+
+/* New lightweight structure */
+.meta-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
 
 .meta-desc {
   display: flex;
-  margin-bottom: 0.8rem;
   line-height: 1.5;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.8rem 1rem;
-  border-left: 3px solid #00f0ff; /* Cyan accent */
+  /* Removed heavy background and border */
+  padding: 0; 
+  border: none;
 }
 
 .meta-desc .prefix {
@@ -216,37 +228,50 @@ watchEffect(() => {
   margin-right: 0.8rem;
   white-space: nowrap;
   user-select: none;
+  opacity: 0.8;
+  font-size: 0.8rem;
 }
 
 .meta-tags {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
-  padding: 0 0.5rem;
 }
 
 .meta-tags .prefix {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.3);
   font-weight: bold;
   margin-right: 0.8rem;
   user-select: none;
+  font-size: 0.8rem;
 }
 
 .tags-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
-.tag-chip {
-  background: rgba(0, 240, 255, 0.15);
-  color: #00f0ff;
-  padding: 0.1em 0.5em;
-  border-radius: 2px;
+/* Replaced chip style with simple text */
+.tag-text {
+  color: rgba(255, 255, 255, 0.7);
   font-size: 0.85em;
   letter-spacing: 0.5px;
-  border: 1px solid rgba(0, 240, 255, 0.2);
+  position: relative;
 }
+.tag-text::after {
+  content: '/';
+  position: absolute;
+  right: -0.5rem;
+  color: rgba(255, 255, 255, 0.1);
+}
+.tag-text:last-child::after {
+  content: '';
+}
+
+/* Removed old chip styles
+.tag-chip { ... }
+*/
 
 .header-divider {
   margin-top: 1.5rem;

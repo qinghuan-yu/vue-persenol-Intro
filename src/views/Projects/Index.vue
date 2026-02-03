@@ -39,29 +39,46 @@
       </transition>
 
       <!-- VIEW 2: Project Detail -->
+      <transition name="detail-section">
       <div v-if="selectedIndex !== -1" class="view-detail">
-        <transition name="project-switch" mode="out-in">
+        <transition 
+            name="project-switch" 
+            appear
+            @before-enter="onSwitchBeforeEnter"
+            @enter="onSwitchEnter"
+            @after-enter="onSwitchAfterEnter"
+            @before-leave="onSwitchBeforeLeave"
+            @leave="onSwitchLeave"
+            @after-leave="onSwitchAfterLeave"
+        >
           <!-- Wrapper keyed by project to force re-render transition -->
           <div :key="currentProject.title" class="switch-container">
             
             <!-- ContentWrapper: Right Aligned Text -->
             <div class="detail-wrapper">
                <div class="detail-content-area">
-                  <h2 class="detail-title-cn stagger-item s-1">{{ currentProject.title }}</h2>
-                  <h2 class="detail-title-en stagger-item s-2">{{ currentProject.descTitle || 'PROJECT DETAILS' }}</h2>
+                  <!-- Layer 1: Top (Title & Subtitle) -->
+                  <div class="layer-top stagger-item l-1">
+                      <h2 class="detail-title-cn">{{ currentProject.title }}</h2>
+                      <h2 class="detail-title-en">{{ currentProject.descTitle || 'PROJECT DETAILS' }}</h2>
+                  </div>
                   
-                  <div class="detail-separator stagger-item s-2">
+                  <!-- Separator (Belongs to Top Layer logically for visual stability, or separate) -->
+                  <div class="detail-separator stagger-item l-1">
                      <div class="dashed-line"></div>
                   </div>
 
-                  <p class="detail-desc stagger-item s-2">
-                    {{ currentProject.desc }}
-                  </p>
-                  <div class="detail-action stagger-item s-2">
-                     <a :href="currentProject.link" target="_blank" class="text-link-box">
-                        <span class="link-label">LAUNCH PROJECT</span>
-                        <span class="link-arrow">↗</span>
-                     </a>
+                  <!-- Layer 2: Bottom (Description & Button) -->
+                  <div class="layer-bottom stagger-item l-2">
+                      <p class="detail-desc">
+                        {{ currentProject.desc }}
+                      </p>
+                      <div class="detail-action">
+                        <a :href="currentProject.link" target="_blank" class="text-link-box">
+                            <span class="link-label">LAUNCH PROJECT</span>
+                            <span class="link-arrow">↗</span>
+                        </a>
+                      </div>
                   </div>
                </div>
             </div>
@@ -72,16 +89,19 @@
                    <div class="digit-row">
                        <!-- Digit 0: Cut 50% by overflow -->
                        <div class="digit-clip-box clip-half">
-                           <span class="idx-digit stagger-exit e-1">0</span>
+                           <span class="idx-digit stagger-item l-3">0</span>
                        </div>
                        <!-- Digit N: Cut ~20% by overflow -->
                        <div class="digit-clip-box clip-small">
-                           <span class="idx-digit stagger-exit e-1">{{ selectedIndex + 1 }}</span>
+                           <span class="idx-digit stagger-item l-3">{{ selectedIndex + 1 }}</span>
                        </div>
                    </div>
                    <!-- Text below digits -->
-                   <div class="txt-proj stagger-exit e-2">PROJ</div>
-                   <div class="txt-info stagger-exit e-2">INFORMATION</div>
+                   <!-- Group text with L-3 or make L-4? User said "Project Index is Layer 3" -->
+                   <div class="txt-group stagger-item l-3">
+                       <span class="txt-proj">PROJ</span>
+                       <span class="txt-info">INFORMATION</span>
+                   </div>
                 </div>
             </div>
 
@@ -98,6 +118,7 @@
         </button>
 
       </div>
+      </transition>
 
       <!-- Bottom Bar with Transition (Moved Outside view-detail) -->
       <transition 
@@ -197,6 +218,31 @@ const onBottomBarBeforeLeave = (el) => {};
 const onBottomBarLeave = (el) => {};
 const onBottomBarAfterLeave = (el) => {};
 
+// --- Debug Hooks for Project Switch ---
+const onSwitchBeforeEnter = (el) => {
+    console.log('[ProjectSwitch] Before Enter', el);
+    console.log('Class List:', el.classList);
+    // Explicitly check for absolute positioning
+    console.log('Computed Style Position:', getComputedStyle(el).position);
+};
+const onSwitchEnter = (el, done) => {
+    console.log('[ProjectSwitch] Enter Active', el);
+    // don't call done(); CSS transition handles it automatically unless :css="false"
+};
+const onSwitchAfterEnter = (el) => {
+    console.log('[ProjectSwitch] After Enter (Transition Complete)', el);
+};
+const onSwitchBeforeLeave = (el) => {
+    console.log('[ProjectSwitch] Before Leave', el);
+    console.log('Leaving Element Position:', getComputedStyle(el).position);
+};
+const onSwitchLeave = (el, done) => {
+    console.log('[ProjectSwitch] Leave Active', el);
+};
+const onSwitchAfterLeave = (el) => {
+    console.log('[ProjectSwitch] After Leave (Element Removed)', el);
+};
+
 // --- Lifecycle ---
 
 onMounted(async () => {
@@ -233,6 +279,14 @@ onUnmounted(() => {
    opacity: 0;
 }
 
+/* Detail Section global transition (when opening/closing the whole view) */
+.detail-section-enter-active, .detail-section-leave-active {
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.detail-section-enter-from, .detail-section-leave-to {
+  opacity: 0;
+}
+
 /* List Header Animation (Projects Title) */
 .list-section-leave-active .list-header {
     transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -263,10 +317,10 @@ onUnmounted(() => {
 
 /* Stagger Animations for Project Detail Entering */
 .project-switch-enter-active {
-    transition: all 1.0s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: all 1.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .project-switch-leave-active {
-    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: all 1.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .project-switch-enter-from {
     opacity: 0; 
@@ -276,32 +330,56 @@ onUnmounted(() => {
 }
 
 /* Entering Elements (Detail) */
-.stagger-item {
+/* REMOVED default opacity/transform from .stagger-item to fix exit glitches */
+/* .stagger-item {} (Empry rule removed) */
+
+/* Apply Enter Animation ONLY when parent is entering */
+.project-switch-enter-active .stagger-item {
     opacity: 0;
-    transform: translateY(20px);
-    animation: simple-fade-up 1.0s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    transform: translateY(40px); /* Increased start distance */
+    animation: simple-fade-up 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Exiting Elements (Detail) - Specifically the Indicator parts */
-.project-switch-leave-active .stagger-exit {
-    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-    opacity: 1;
-    transform: translateY(0);
-}
-.project-switch-leave-to .stagger-exit {
-    opacity: 0;
-    transform: translateY(-20px); /* Move Up out */
+/* --- Enter Delays --- */
+/* Layer 1: Top (Title/Subtitle/Line) - Starts fast */
+.project-switch-enter-active .stagger-item.l-1 { animation-delay: 0.8s; } 
+
+/* Layer 2: Bottom (Desc/Button) - Starts later */
+.project-switch-enter-active .stagger-item.l-2 { animation-delay: 1.1s; }
+
+/* Layer 3: Right Index - Starts last */
+.project-switch-enter-active .stagger-item.l-3 { animation-delay: 1.4s; }
+/* Removed duplicate rule */
+
+
+/* --- Exit Transitions & Delays --- */
+/* We target the leave-active state where Vue keeps the element in DOM */
+.project-switch-leave-active .stagger-item {
+    /* No need to override animation now */
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    /* Start state is natural (visible, pos 0) */
 }
 
-/* Delays Enter */
-.right-indicator .idx-big {
-    display: inline-block;
-    /* Use simple fade up to match everything else, no bespoke bounce */
-    animation: simple-fade-up 1.0s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: 0.4s;
+.project-switch-leave-to .stagger-item {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(-40px); /* Move Up out - increased distance */
 }
+
+/* Reverse Order for Exit: Bottom/Right first, then Top */
+/* Layer 3 (Index) leaves first */
+.project-switch-leave-active .stagger-item.l-3 { transition-delay: 0.0s; }
+
+/* Layer 2 (Desc) leaves next */
+.project-switch-leave-active .stagger-item.l-2 { transition-delay: 0.2s; }
+
+/* Layer 1 (Title) leaves last */
+.project-switch-leave-active .stagger-item.l-1 { transition-delay: 0.4s; }
+
+/* Layer 2 (Desc) leaves next */
+.project-switch-leave-active .stagger-item.l-2 { transition-delay: 0.1s; }
+
+/* Layer 1 (Title) leaves last */
+.project-switch-leave-active .stagger-item.l-1 { transition-delay: 0.2s; }
 
 /* 
 @keyframes bounce-enter {
@@ -475,20 +553,22 @@ onUnmounted(() => {
 }
 
 .detail-title-cn {
-  font-size: 48px;
+  font-size: 60px; /* Increased from 48px */
   font-weight: 700;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .detail-title-en {
-  font-size: 24px;
+  font-size: 20px; /* Adjusted slightly */
   font-weight: 700;
   font-family: 'Arial Black', sans-serif;
   color: white;
-  margin: 0 0 16px 0;
+  margin: 8px 0 24px 0;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  opacity: 0.8;
 }
 
 .detail-separator {
@@ -500,12 +580,13 @@ onUnmounted(() => {
 }
 
 .detail-desc {
-  font-size: 14px;
+  font-size: 16px; /* Increased from 14px */
   line-height: 1.8;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 32px;
-  max-width: 400px;
+  max-width: 440px; /* Slightly wider */
 }
+
 
 /* Nav Arrows */
 .nav-arrow {
@@ -600,23 +681,23 @@ onUnmounted(() => {
 
 /* Both digits same height for alignment */
 .clip-half {
-  height: 80px;
+  height: 60px; /* Reduced from 80px to cut half of 100px font */
 }
 
 .clip-small {
-  height: 80px;
+  height: 60px; /* Cut bottom of second digit */
 }
 
 .idx-digit {
-  font-size: 150px;
+  font-size: 100px; /* Reduced from 110px */
   font-weight: 900;
   color: #22d3ee;
-  line-height: 0.8; /* 150 * 0.8 = 120px actual height */
+  line-height: 0.8; 
   letter-spacing: -0.05em;
   font-family: 'Arial Black', sans-serif;
   display: block;
   position: relative;
-  top: 0;
+  top: 0; 
 }
 
 .txt-proj {
@@ -639,12 +720,8 @@ onUnmounted(() => {
 }
 
 /* Delays Enter: Target the separated digits */
-.indicator-group-custom .idx-digit {
-    animation: simple-fade-up 1.0s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: 0.4s;
-    opacity: 0;
-    transform: translateY(20px);
-}
+/* Removed old rule to avoid conflict with l-3 class */
+/* .indicator-group-custom .idx-digit { ... } */
 
 /* Bottom Bar Transition */
 .bottom-bar-enter-active,
@@ -773,9 +850,11 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
+/* Ensure container is absolute to prevent layout jumps during out-in switch */
 .switch-container {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
 }
@@ -806,21 +885,16 @@ onUnmounted(() => {
 }
 
 /* Project Switch Parallax (Internal Toggle) */
-.project-switch-enter-active,
-.project-switch-leave-active {
+.project-switch-enter-active {
   transition: all 1.0s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.project-switch-enter-from {
-  opacity: 0;
-  transform: translateY(40px); /* Enter from below */
-}
-
-.project-switch-leave-to {
-  opacity: 0;
-  transform: translateY(-40px); /* Leave to top */
-}
-
+/* 
+   CRITICAL FIX: 
+   Container must NOT fade out immediately. 
+   We delay the container's fade out to allow children to stagger out first.
+   Container waits 0.8s (covering max child delay 0.2s + duration 0.5s), then instantly fades.
+*/
 .project-switch-enter-to,
 .project-switch-leave-from {
   opacity: 1;
