@@ -75,7 +75,7 @@
           mode="out-in"
           @before-leave="onBeforeLeave"
         >
-          <div :key="route.fullPath" class="view-wrapper">
+          <div :key="route.fullPath" class="view-wrapper" :class="route.name">
             <component :is="Component" />
           </div>
         </transition>
@@ -574,6 +574,13 @@ onMounted(() => {
 .parallax-leave-to {
   opacity: 0;
   transform: translateY(-60px);
+}
+
+/* 🎵 Custom Leave for Music Page: No translation, just fade */
+/* This will affect the leaving Music page if route.name='music' added to wrapper class */
+.view-wrapper.music.parallax-leave-to {
+  transform: translateY(0) !important;
+  opacity: 0;
 }
 
 .parallax-enter-to,

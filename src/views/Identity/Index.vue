@@ -1,7 +1,17 @@
 <template>
   <section class="identity-container">
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-text">SYSTEM INITIALIZING</div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" :style="{ width: progress + '%' }"></div>
+        </div>
+        <div class="progress-number">{{ progress }}%</div>
+      </div>
+    </div>
+
     <!-- Content Layer -->
-    <div class="layer-content">
+    <div class="layer-content" :class="{ 'content-hidden': isLoading }">
       <div class="identity-wrapper">
         <!-- 1. Title Group (First) -->
         <h1 class="main-title stagger-item" style="--i: 1;"><span class="relic-text">I am Relic</span><br><span class="blue-text">I am Ark</span></h1>
@@ -44,20 +54,57 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
+import { preloadResources } from '@/utils/resourceLoader';
 
-onMounted(() => {
+const isLoading = ref(false);
+const progress = ref(0);
+
+// 定义资源清单 (请替换为你项目中真实的路径)
+const resources = [
+  // 关键图片
+  // { type: 'image', url: '/images/hero-bg.jpg' },
+  
+  // 关键音频 (预加载这些可以让播放时不卡顿)
+  // { type: 'audio', url: '/music/song1.mp3' }, 
+  
+  // 关键页面组件 (路由预热)
+  { type: 'component', importFn: () => import('@/views/Projects/Index.vue') },
+  { type: 'component', importFn: () => import('@/views/Blog/Index.vue') },
+  { type: 'component', importFn: () => import('@/views/Music/Index.vue') },
+  
+  // 占位符 (为了演示效果，如果资源很少，进度条太快，可以加几个占位)
+  { type: 'dummy' }, { type: 'dummy' }, { type: 'dummy' }
+];
+
+onMounted(async () => {
   // 检查是否是网站首次加载（整个会话的第一次访问）
   const isFirstVisit = !sessionStorage.getItem('hasVisited');
   const container = document.querySelector('.identity-container');
   // App Loading Finished Time (approx 3.5s)
   
-  if (isFirstVisit && container) {
-    sessionStorage.setItem('hasVisited', 'true');
-    setTimeout(() => {
-        container.classList.add('animate-entry');
-    }, 3500); 
+  if (isFirstVisit) {
+    // 首次访问：开启 Loading 模式
+    isLoading.value = true;
+    
+    try {
+      // 执行真实预加载
+      await preloadResources(resources, (p) => {
+        progress.value = p;
+      });
+      
+      // 加载完成，稍作停留展示 100%
+      setTimeout(() => {
+        finishLoading(container);
+      }, 500);
+      
+    } catch (e) {
+      console.error("Loading failed", e);
+      finishLoading(container); // 出错也要进系统
+    }
   } else if (container) {
+    // 非首次访问：直接显示，不需要 Loading
+    isLoading.value = false;
     // 强制先移除（防止缓存导致的类名残留），再延迟添加
     container.classList.remove('animate-entry'); 
     
@@ -68,6 +115,14 @@ onMounted(() => {
     }, 100);
   }
 });
+
+function finishLoading(container) {
+  isLoading.value = false;
+  sessionStorage.setItem('hasVisited', 'true');
+  if (container) {
+    container.classList.add('animate-entry');
+  }
+}
 </script>
 
 <style scoped>
@@ -77,6 +132,61 @@ onMounted(() => {
 
 .relic-text {
   color: #888888;
+}
+
+/* 新增：Loading 样式 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0a0a; /* 与背景色一致 */
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-content {
+  width: 300px;
+  text-align: center;
+}
+
+.loading-text {
+  color: #22d3ee;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  margin-bottom: 12px;
+  font-family: monospace;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 2px;
+  background: rgba(34, 211, 238, 0.2);
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #22d3ee;
+  width: 0%;
+  transition: width 0.2s linear;
+  box-shadow: 0 0 10px #22d3ee;
+}
+
+.progress-number {
+  color: #22d3ee;
+  font-family: monospace;
+  font-size: 10px;
+  margin-top: 8px;
+  text-align: right;
+}
+
+/* 控制内容显示的辅助类 */
+.content-hidden {
+  opacity: 0;
 }
 
 .identity-container {

@@ -12,11 +12,11 @@ const routes = [
     component: MainLayout,
     redirect: '/identity', // 根路径重定向
     children: [
-      { path: 'identity', component: Identity },
-      { path: 'projects', component: Projects },
-      { path: 'blog', component: Blog },
-      { path: 'music', component: Music },
-      { path: 'contact', component: Contact },
+      { path: 'identity', name: 'identity', component: Identity },
+      { path: 'projects', name: 'projects', component: Projects },
+      { path: 'blog', name: 'blog', component: Blog },
+      { path: 'music', name: 'music', component: Music },
+      { path: 'contact', name: 'contact', component: Contact },
     ],
   },
   // 🛡️ 捕获所有未知路径，重回起点

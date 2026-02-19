@@ -41,27 +41,29 @@
         <div class="visualizer-container">
           <!-- 移除 loading-state，始终显示 visualizer -->
           
-          <div class="circle-visualizer" ref="visualizerRef">
-            <div
-              v-for="n in linesTotal"
-              :key="n"
-              class="line"
-              :style="{ 
-                transform: `rotate(${360 / linesTotal * (n - 1)}deg)`,
-                '--i': n,
-                '--total': linesTotal
-              }"
-              ref="lineRefs"
-            ></div>
-            
-            <!-- Center Info -->
-            <div class="center-info">
-              <div class="play-btn" @click="togglePlay">
-                <span v-if="!isPlaying" class="icon-play">▶</span>
-                <span v-else class="icon-pause">❚❚</span>
+          <transition name="visualizer-fade" appear>
+            <div class="circle-visualizer" ref="visualizerRef">
+              <div
+                v-for="n in linesTotal"
+                :key="n"
+                class="line"
+                :style="{ 
+                  transform: `rotate(${360 / linesTotal * (n - 1)}deg)`,
+                  '--i': n,
+                  '--total': linesTotal
+                }"
+                ref="lineRefs"
+              ></div>
+              
+              <!-- Center Info -->
+              <div class="center-info">
+                <div class="play-btn" @click="togglePlay">
+                  <span v-if="!isPlaying" class="icon-play">▶</span>
+                  <span v-else class="icon-pause">❚❚</span>
+                </div>
               </div>
             </div>
-          </div>
+          </transition>
         </div>
       </div>
     </div>
@@ -527,6 +529,13 @@ onUnmounted(() => {
 }
 
 /* --- The Visualizer --- */
+.visualizer-fade-enter-active {
+  animation: visualize-init 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.visualizer-fade-leave-active {
+  animation: visualize-init 0.5s cubic-bezier(0.22, 1, 0.36, 1) reverse forwards;
+}
+
 .circle-visualizer {
   position: relative;
   /* Increased radius: width/height from 50vmin -> 65vmin */
@@ -537,15 +546,19 @@ onUnmounted(() => {
   align-items: center;
   z-index: 10;
   
-  /* Entrance animation for the container */
-  opacity: 0;
-  transform: scale(0.8);
-  animation: visualize-init 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  animation-delay: 0.2s; /* Slight delay to load after page */
+  /* Entrance animation moved to Transition component */
+  /* opacity: 0; */
+  /* transform: scale(0.8); */
+  /* animation: visualize-init 1s cubic-bezier(0.22, 1, 0.36, 1) forwards; */
+  /* animation-delay: 0.2s; */ 
 }
 
 @keyframes visualize-init {
-  to {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
     opacity: 1;
     transform: scale(1);
   }
